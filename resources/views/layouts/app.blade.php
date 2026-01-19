@@ -202,24 +202,15 @@
                         <span>Dashboard</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-user"></i>
-                        <span>Profile</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Documents</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </li>
+                @if (Auth::user()->user_type == 0)
+                    <li>
+                        <a href="{{ route('admin.registrations') }}">
+                            <i class="fas fa-users"></i>
+                            <span>All Registrations</span>
+                        </a>
+                    </li>>
+                    </li>
+                @endif
             </ul>
         </aside>
 
@@ -227,7 +218,11 @@
         <main class="main-content">
             <div class="top-bar">
                 <h1 style="margin: 0; font-size: 1.5rem; color: #1e293b;">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    @hasSection('page-title')
+                        @yield('page-title')
+                    @else
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    @endif
                 </h1>
                 <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                     @csrf
