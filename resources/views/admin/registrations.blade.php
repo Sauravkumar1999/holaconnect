@@ -7,220 +7,158 @@
 @endsection
 
 @push('styles')
-<style>
-    .registrations-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-    }
-
-    .registrations-table thead {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .registrations-table th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .registrations-table td {
-        padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .registrations-table tbody tr {
-        transition: background-color 0.2s ease;
-    }
-
-    .registrations-table tbody tr:hover {
-        background-color: #f8fafc;
-    }
-
-    .registrations-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .badge-pre-payment {
-        background-color: #dbeafe;
-        color: #1e40af;
-    }
-
-    .badge-new-payment {
-        background-color: #dcfce7;
-        color: #166534;
-    }
-
-    .btn-view {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .document-link {
-        color: #667eea;
-        text-decoration: none;
-        margin-right: 1rem;
-        font-size: 0.875rem;
-    }
-
-    .document-link:hover {
-        text-decoration: underline;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        padding: 1.5rem;
-        text-align: center;
-    }
-
-    .stat-card h3 {
-        margin: 0;
-        font-size: 2rem;
-        color: #667eea;
-        font-weight: 700;
-    }
-
-    .stat-card p {
-        margin: 0.5rem 0 0;
-        color: #64748b;
-        font-size: 0.875rem;
-    }
-
-    .no-data {
-        text-align: center;
-        padding: 3rem;
-        color: #94a3b8;
-    }
-
-    .no-data i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        display: block;
-    }
-</style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.5/css/buttons.bootstrap5.min.css">
+    <link href="https://cdn.datatables.net/v/dt/dt-2.3.5/b-3.2.5/b-colvis-3.2.5/datatables.min.css" rel="stylesheet"
+        integrity="sha384-gCgh7e0dCj9UjbRDAftkhzrjwYqzzh/KU7ZhaNGU9c63mVinPdBK0lXYJO3PGKHQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/2.1.2/css/colReorder.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.7/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchbuilder/1.8.4/css/searchBuilder.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/3.1.3/css/select.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 @endpush
 
 @section('content')
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>{{ $registrations->count() }}</h3>
-            <p>Total Registrations</p>
-        </div>
-        <div class="stat-card">
-            <h3>{{ $registrations->where('payment_type', 'pre_payment')->count() }}</h3>
-            <p>Pre-Payment</p>
-        </div>
-        <div class="stat-card">
-            <h3>{{ $registrations->where('payment_type', 'new_payment')->count() }}</h3>
-            <p>New Payment</p>
-        </div>
-    </div>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">{{ $title }}</div>
+            <div class="card-body">
+                <div class="row mb-3 g-2 align-items-end">
+                    <!-- Date Range -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Date Range</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar-days"></i>
+                            </span>
+                            <input type="text" name="daterange" class="form-control" placeholder="Select date range"
+                                id="date-range">
+                        </div>
+                    </div>
 
-    <div class="card">
-        <h2><i class="fas fa-users"></i> All Registrations</h2>
+                    <!-- Custom Filters Slot -->
+                    @if (isset($filters))
+                        {{ $filters }}
+                    @endif
+                </div>
 
-        @if($registrations->count() > 0)
-            <div style="overflow-x: auto;">
-                <table class="registrations-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>PSP Number</th>
-                            <th>Taxi Driver ID</th>
-                            <th>Payment Type</th>
-                            <th>Documents</th>
-                            <th>Registered At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($registrations as $registration)
-                            <tr>
-                                <td>{{ $registration->id }}</td>
-                                <td><strong>{{ $registration->name }}</strong></td>
-                                <td>{{ $registration->email }}</td>
-                                <td>{{ $registration->phone }}</td>
-                                <td>{{ $registration->psp_number ?? '-' }}</td>
-                                <td>{{ $registration->taxi_driver_id ?? '-' }}</td>
-                                <td>
-                                    <span class="badge badge-{{ $registration->payment_type === 'pre_payment' ? 'pre' : 'new' }}-payment">
-                                        {{ ucfirst(str_replace('_', ' ', $registration->payment_type)) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($registration->document_dashboard_path)
-                                        <a href="{{ asset($registration->document_dashboard_path) }}" target="_blank" class="document-link">
-                                            <i class="fas fa-file-alt"></i> Dashboard
-                                        </a>
-                                    @endif
-                                    @if($registration->document_identity_path)
-                                        <a href="{{ asset($registration->document_identity_path) }}" target="_blank" class="document-link">
-                                            <i class="fas fa-id-card"></i> Identity
-                                        </a>
-                                    @endif
-                                    @if($registration->document_payment_receipt_path)
-                                        <a href="{{ asset($registration->document_payment_receipt_path) }}" target="_blank" class="document-link">
-                                            <i class="fas fa-receipt"></i> Receipt
-                                        </a>
-                                    @endif
-                                    @if(!$registration->document_dashboard_path && !$registration->document_identity_path && !$registration->document_payment_receipt_path)
-                                        <span style="color: #94a3b8;">No documents</span>
-                                    @endif
-                                </td>
-                                <td>{{ $registration->created_at->format('d M Y, h:i A') }}</td>
-                                <td>
-                                    <a href="{{ route('dashboard') }}?user_id={{ $registration->id }}" class="btn-view">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                {!! $dataTable->table(attributes: ['class' => 'table table-striped table-hover']) !!}
             </div>
-        @else
-            <div class="no-data">
-                <i class="fas fa-inbox"></i>
-                <p>No registrations found.</p>
-            </div>
-        @endif
+        </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.5/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.colVis.min.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/2.1.2/js/dataTables.colReorder.min.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/2.1.2/js/colReorder.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/searchbuilder/1.8.4/js/dataTables.searchBuilder.min.js"></script>
+    <script src="https://cdn.datatables.net/searchbuilder/1.8.4/js/searchBuilder.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.min.js"></script>
+    <script src="https://cdn.datatables.net/select/3.1.3/js/select.bootstrap5.min.js"></script>
+    {!! $dataTable->scripts() !!}
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Initialize date range picker
+            var start = moment().subtract(29, 'days');
+            var end = moment();
+
+            function cb(start, end) {
+                $('#date-range').val(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            }
+
+            $('#date-range').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                        'month').endOf('month')]
+                }
+            }, cb);
+
+            cb(start, end);
+
+            // Wait for DataTable to initialize, then override ajax data
+            setTimeout(function() {
+                if (window.LaravelDataTables && window.LaravelDataTables['registrations-table']) {
+                    var table = window.LaravelDataTables['registrations-table'];
+                    var settings = table.settings()[0];
+
+                    // Override ajax data to include date range
+                    if (settings.ajax && typeof settings.ajax === 'object') {
+                        var originalData = settings.ajax.data;
+                        settings.ajax.data = function(d) {
+                            d.daterange = $('#date-range').val() || '';
+                            if (originalData && typeof originalData === 'function') {
+                                originalData.call(this, d);
+                            }
+                        };
+                    }
+                }
+            }, 100);
+
+            // Date range filter change handler
+            $('#date-range').on('apply.daterangepicker', function(ev, picker) {
+                if (window.LaravelDataTables && window.LaravelDataTables['registrations-table']) {
+                    window.LaravelDataTables['registrations-table'].draw();
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(document).on('click', '.dt-delete-btn', function() {
+            let url = $(this).data('action-url');
+
+            if (typeof sweetalert !== 'undefined') {
+                sweetalert('Delete?', 'Delete Selected Data.', 'warning', 'Delete')
+                    .then(result => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: url,
+                                type: "DELETE",
+                                data: {
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(res) {
+                                    // Reload all DataTables on the page
+                                    $('.dataTable').each(function() {
+                                        $(this).DataTable().ajax.reload(null, false);
+                                    });
+
+                                    if (typeof showSweetToast !== 'undefined') {
+                                        showSweetToast(res.message, 'success');
+                                    } else if (typeof showToast !== 'undefined') {
+                                        showToast(res.message, 'success');
+                                    }
+                                },
+                                error: function() {
+                                    if (typeof showToast !== 'undefined') {
+                                        showToast('Delete failed', 'error');
+                                    }
+                                }
+                            });
+                        }
+                    });
+            }
+        });
+    </script>
+@endpush

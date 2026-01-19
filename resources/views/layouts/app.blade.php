@@ -208,7 +208,7 @@
                             <i class="fas fa-users"></i>
                             <span>All Registrations</span>
                         </a>
-                    </li>>
+                    </li>
                     </li>
                 @endif
             </ul>
