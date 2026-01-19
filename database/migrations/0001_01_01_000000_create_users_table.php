@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,6 +16,16 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone');
+            $table->string('psp_number')->nullable();
+            $table->string('taxi_driver_id')->nullable();
+            $table->integer('user_type')->default(1); // 0 = Admin, 1 = User
+            $table->string('document_dashboard_path')->nullable();
+            $table->string('document_identity_path')->nullable();
+            $table->string('document_payment_receipt_path')->nullable();
+            $table->string('payment_type'); // 'pre_payment' or 'new_payment'
+            $table->boolean('terms_agreed')->default(false);
+            $table->boolean('share_certificate_agreed')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
+class RegisterController extends Controller
+{
+    /**
+     * Show the registration form.
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Handle registration request.
+     */
+    public function register(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'required|string|max:20',
+            'psp_number' => 'nullable|string|max:255',
+            'taxi_driver_id' => 'nullable|string|max:255',
+            'document_dashboard' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'document_identity' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'payment_type' => 'required|in:pre_payment,new_payment',
+            'document_payment_receipt' => 'required_if:payment_type,pre_payment|nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'terms_agreed' => 'required|accepted',
+            'share_certificate_agreed' => 'required|accepted',
+        ]);
+
+        // Handle file uploads - Store directly in public folder
+        $documentDashboardPath = null;
+        if ($request->hasFile('document_dashboard')) {
+            $file = $request->file('document_dashboard');
+            $fileName = time() . '_dashboard_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/dashboard'), $fileName);
+            $documentDashboardPath = 'documents/dashboard/' . $fileName;
+        }
+
+        $documentIdentityPath = null;
+        if ($request->hasFile('document_identity')) {
+            $file = $request->file('document_identity');
+            $fileName = time() . '_identity_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/identity'), $fileName);
+            $documentIdentityPath = 'documents/identity/' . $fileName;
+        }
+
+        $documentPaymentReceiptPath = null;
+        if ($request->payment_type === 'pre_payment' && $request->hasFile('document_payment_receipt')) {
+            $file = $request->file('document_payment_receipt');
+            $fileName = time() . '_receipt_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/payment_receipts'), $fileName);
+            $documentPaymentReceiptPath = 'documents/payment_receipts/' . $fileName;
+        }
+
+        // Create the user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'],
+            'psp_number' => $validated['psp_number'] ?? null,
+            'taxi_driver_id' => $validated['taxi_driver_id'] ?? null,
+            'user_type' => 1, // User type
+            'document_dashboard_path' => $documentDashboardPath,
+            'document_identity_path' => $documentIdentityPath,
+            'document_payment_receipt_path' => $documentPaymentReceiptPath,
+            'payment_type' => $validated['payment_type'],
+            'terms_agreed' => true,
+            'share_certificate_agreed' => true,
+        ]);
+
+        // Log the user in
+        Auth::login($user);
+
+        // Redirect with success message
+        return redirect()->route('dashboard')->with('success', 'Successfully Registered! Welcome to Hola Taxi Ireland.');
+    }
+}

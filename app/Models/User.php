@@ -21,6 +21,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'psp_number',
+        'taxi_driver_id',
+        'user_type',
+        'document_dashboard_path',
+        'document_identity_path',
+        'document_payment_receipt_path',
+        'payment_type',
+        'terms_agreed',
+        'share_certificate_agreed',
     ];
 
     /**
@@ -43,6 +53,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'terms_agreed' => 'boolean',
+            'share_certificate_agreed' => 'boolean',
         ];
     }
 }
