@@ -104,7 +104,7 @@
         .form-select {
             border: 2px solid #e1e8ed;
             border-radius: 10px;
-            padding: 0.625rem 1rem;
+            padding: 3px 9px;
             font-size: 0.9375rem;
             transition: all 0.3s ease;
             width: 100%;
