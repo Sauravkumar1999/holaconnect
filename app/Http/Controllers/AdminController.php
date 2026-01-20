@@ -120,6 +120,14 @@ class AdminController extends Controller
                     }
                     return '<span class="text-muted"><i class="fas fa-times"></i></span>';
                 })
+                ->addColumn('certificate', function ($user) {
+                    if ($user->certificate_path && $user->application_status === 'accepted') {
+                        return '<a href="' . asset($user->certificate_path) . '" download class="text-primary" title="Download Certificate">
+                            <i class="fas fa-download"></i>
+                        </a>';
+                    }
+                    return '<span class="text-muted"><i class="fas fa-times"></i></span>';
+                })
                 ->editColumn('payment_type', function ($user) {
                     $badgeClass = $user->payment_type === 'pre_payment' ? 'bg-primary' : 'bg-success';
                     return '<span class="badge ' . $badgeClass . '">' . ucfirst(str_replace('_', ' ', $user->payment_type)) . '</span>';
@@ -133,7 +141,7 @@ class AdminController extends Controller
                 ->editColumn('created_at', function ($user) {
                     return $user->created_at->format('d M Y, h:i A');
                 })
-                ->rawColumns(['action', 'document_dashboard', 'document_identity', 'document_receipt', 'payment_type', 'application_status'])
+                ->rawColumns(['action', 'document_dashboard', 'document_identity', 'document_receipt', 'certificate', 'payment_type', 'application_status'])
                 ->make(true);
         }
 
@@ -151,6 +159,7 @@ class AdminController extends Controller
                 Column::make('document_identity')->title('<i class="fas fa-id-card"></i> Identity')->orderable(false)->searchable(false)->addClass('text-center'),
                 Column::make('document_receipt')->title('<i class="fas fa-receipt"></i> Receipt')->orderable(false)->searchable(false)->addClass('text-center'),
                 Column::make('application_status')->title('Status'),
+                Column::computed('certificate')->title('<i class="fas fa-certificate"></i> Certificate')->orderable(false)->searchable(false)->addClass('text-center')->exportable(false)->printable(false),
                 Column::make('created_at')->title('Registered At'),
                 Column::computed('action')
                     ->exportable(false)
