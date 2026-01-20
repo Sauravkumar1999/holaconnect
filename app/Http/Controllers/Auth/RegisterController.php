@@ -43,9 +43,9 @@ class RegisterController extends Controller
             'taxi_driver_id' => 'nullable|string|max:255',
             'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'payment_type' => 'required|in:pre_payment,new_payment,full_payment',
-            'document_payment_receipt' => 'required_if:payment_type,pre_payment,full_payment|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'payment_order_code' => 'required_if:payment_type,new_payment,pre_payment|nullable|string',
+            'payment_type' => 'required|in:existing_user,partial_user,new_user',
+            'document_payment_receipt' => 'required_if:payment_type,existing_user,partial_user|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'payment_order_code' => 'required_if:payment_type,new_user,partial_user|nullable|string',
             'terms_agreed' => 'required|accepted',
             'share_certificate_agreed' => 'required|accepted',
         ]);
@@ -67,8 +67,8 @@ class RegisterController extends Controller
             $documentIdentityPath = 'documents/identity/' . $fileName;
         }
 
-        // Verify payment if applicable (new_payment or pre_payment)
-        if (in_array($validated['payment_type'], ['new_payment', 'pre_payment'])) {
+        // Verify payment if applicable (new_user or partial_user)
+        if (in_array($validated['payment_type'], ['new_user', 'partial_user'])) {
             $paymentOrderCode = $request->input('payment_order_code');
 
             if (!$paymentOrderCode) {
@@ -87,9 +87,9 @@ class RegisterController extends Controller
             }
         }
 
-        // Handle document receipt upload (pre_payment or full_payment)
+        // Handle document receipt upload (partial_user or existing_user)
         $documentPaymentReceiptPath = null;
-        if (in_array($validated['payment_type'], ['pre_payment', 'full_payment']) && $request->hasFile('document_payment_receipt')) {
+        if (in_array($validated['payment_type'], ['partial_user', 'existing_user']) && $request->hasFile('document_payment_receipt')) {
             $file = $request->file('document_payment_receipt');
             $fileName = time() . '_receipt_' . $file->getClientOriginalName();
             $file->move(public_path('documents/payment_receipts'), $fileName);

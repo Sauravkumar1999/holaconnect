@@ -148,25 +148,25 @@
                             Payment Type <span class="required-mark">*</span>
                         </label>
                         <div class="payment-type-wrapper">
-                            <label class="radio-card" id="prePaymentCard">
-                                <input type="radio" name="payment_type" value="pre_payment" id="pre_payment"
-                                    {{ old('payment_type') == 'pre_payment' ? 'checked' : '' }} required>
-                                <label for="pre_payment" style="cursor: pointer; margin: 0;">
-                                    <i class="fas fa-money-check-alt"></i> Pre Payment
+                            <label class="radio-card" id="existingUserCard">
+                                <input type="radio" name="payment_type" value="existing_user" id="existing_user"
+                                    {{ old('payment_type') == 'existing_user' ? 'checked' : '' }} required>
+                                <label for="existing_user" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-user-check"></i> Existing User
                                 </label>
                             </label>
-                            <label class="radio-card" id="fullPaymentCard">
-                                <input type="radio" name="payment_type" value="full_payment" id="full_payment"
-                                    {{ old('payment_type') == 'full_payment' ? 'checked' : '' }} required>
-                                <label for="full_payment" style="cursor: pointer; margin: 0;">
-                                    <i class="fas fa-file-invoice-dollar"></i> Full Payment
+                            <label class="radio-card" id="partialUserCard">
+                                <input type="radio" name="payment_type" value="partial_user" id="partial_user"
+                                    {{ old('payment_type') == 'partial_user' ? 'checked' : '' }} required>
+                                <label for="partial_user" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-money-check-alt"></i> Partial User
                                 </label>
                             </label>
-                            <label class="radio-card" id="newPaymentCard">
-                                <input type="radio" name="payment_type" value="new_payment" id="new_payment"
-                                    {{ old('payment_type') == 'new_payment' ? 'checked' : '' }} required>
-                                <label for="new_payment" style="cursor: pointer; margin: 0;">
-                                    <i class="fas fa-credit-card"></i> New Payment
+                            <label class="radio-card" id="newUserCard">
+                                <input type="radio" name="payment_type" value="new_user" id="new_user"
+                                    {{ old('payment_type') == 'new_user' ? 'checked' : '' }} required>
+                                <label for="new_user" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-user-plus"></i> New User
                                 </label>
                             </label>
                         </div>
@@ -274,7 +274,6 @@
                     <div id="paymentIframeSection" style="display: none;">
                         <div class="text-center mb-3">
                             <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
                             </div>
                             <p class="mt-2">Redirecting to secure payment gateway...</p>
                         </div>
@@ -309,14 +308,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const prePaymentRadio = document.getElementById('pre_payment');
-            const fullPaymentRadio = document.getElementById('full_payment');
-            const newPaymentRadio = document.getElementById('new_payment');
+            const existingUserRadio = document.getElementById('existing_user');
+            const partialUserRadio = document.getElementById('partial_user');
+            const newUserRadio = document.getElementById('new_user');
+
             const paymentReceiptField = document.getElementById('paymentReceiptField');
             const paymentReceiptInput = document.getElementById('document_payment_receipt');
-            const prePaymentCard = document.getElementById('prePaymentCard');
-            const fullPaymentCard = document.getElementById('fullPaymentCard');
-            const newPaymentCard = document.getElementById('newPaymentCard');
+            
+            const existingUserCard = document.getElementById('existingUserCard');
+            const partialUserCard = document.getElementById('partialUserCard');
+            const newUserCard = document.getElementById('newUserCard');
+
             const registrationForm = document.getElementById('registrationForm');
             const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
             const paymentOrderCodeInput = document.getElementById('payment_order_code');
@@ -326,82 +328,88 @@
 
             function togglePaymentReceipt() {
                 // Reset active classes
-                prePaymentCard.classList.remove('active');
-                fullPaymentCard.classList.remove('active');
-                newPaymentCard.classList.remove('active');
+                existingUserCard.classList.remove('active');
+                partialUserCard.classList.remove('active');
+                newUserCard.classList.remove('active');
 
-                if (prePaymentRadio.checked) {
-                    // Pre Payment: Upload File + Payment (Amount - 5)
+                if (existingUserRadio.checked) {
+                    // Existing User: Upload File + NO Payment
                     paymentReceiptField.style.display = 'block';
                     paymentReceiptInput.required = true;
-                    prePaymentCard.classList.add('active');
-                } else if (fullPaymentRadio.checked) {
-                    // Full Payment: Upload File + No Payment
+                    existingUserCard.classList.add('active');
+                } else if (partialUserRadio.checked) {
+                    // Partial User: Upload File + Payment (Amount - 5)
                     paymentReceiptField.style.display = 'block';
                     paymentReceiptInput.required = true;
-                    fullPaymentCard.classList.add('active');
-                } else if (newPaymentRadio.checked) {
-                    // New Payment: No Upload + Full Payment
+                    partialUserCard.classList.add('active');
+                } else if (newUserRadio.checked) {
+                    // New User: No Upload + Full Payment
                     paymentReceiptField.style.display = 'none';
                     paymentReceiptInput.required = false;
                     paymentReceiptInput.value = '';
-                    newPaymentCard.classList.add('active');
+                    newUserCard.classList.add('active');
                 }
             }
 
             // Add event listeners
-            prePaymentRadio.addEventListener('change', togglePaymentReceipt);
-            fullPaymentRadio.addEventListener('change', togglePaymentReceipt);
-            newPaymentRadio.addEventListener('change', togglePaymentReceipt);
+            existingUserRadio.addEventListener('change', togglePaymentReceipt);
+            partialUserRadio.addEventListener('change', togglePaymentReceipt);
+            newUserRadio.addEventListener('change', togglePaymentReceipt);
 
             // Initialize on page load
             togglePaymentReceipt();
 
             // Make radio cards clickable
-            prePaymentCard.addEventListener('click', function() {
-                prePaymentRadio.checked = true;
+            existingUserCard.addEventListener('click', function() {
+                existingUserRadio.checked = true;
                 togglePaymentReceipt();
             });
 
-            fullPaymentCard.addEventListener('click', function() {
-                fullPaymentRadio.checked = true;
+            partialUserCard.addEventListener('click', function() {
+                partialUserRadio.checked = true;
                 togglePaymentReceipt();
             });
 
-            newPaymentCard.addEventListener('click', function() {
-                newPaymentRadio.checked = true;
+            newUserCard.addEventListener('click', function() {
+                newUserRadio.checked = true;
                 togglePaymentReceipt();
             });
 
-            // Intercept form submission for payment types
+            // Intercept form submission
             registrationForm.addEventListener('submit', function(e) {
-                if (newPaymentRadio.checked || prePaymentRadio.checked) {
-                    // Check if we already have a payment code (successful payment)
+                // Case 1: Existing User - Submit Directly (No Payment)
+                if (existingUserRadio.checked) {
+                    return; // Allow default submit
+                }
+
+                // Case 2: Partial or New User payment needed
+                if (partialUserRadio.checked || newUserRadio.checked) {
+                    // Check if we already have a successful payment code
                     if (paymentOrderCodeInput.value) {
                          return; // Allow submit
                     }
 
+                    // Prevent default submit to show payment modal
                     e.preventDefault();
                     
-                    // Validate form first
+                    // Validate form first using browser built-in validation
                     if (!registrationForm.checkValidity()) {
                         registrationForm.reportValidity();
                         return;
                     }
 
                     // Set Payment Amount
-                    if (newPaymentRadio.checked) {
+                    if (newUserRadio.checked) {
                          paymentAmountInput.value = baseAmount.toFixed(2);
-                    } else if (prePaymentRadio.checked) {
+                    } else if (partialUserRadio.checked) {
                          let discountedAmount = baseAmount - 5;
-                         if (discountedAmount < 0.30) discountedAmount = 0.30; // Minimum safety
+                         if (discountedAmount < 0.30) discountedAmount = 0.30; 
                          paymentAmountInput.value = discountedAmount.toFixed(2);
                     }
 
                     // Show payment modal
                     paymentModal.show();
                 }
-                // Full Payment submits directly
             });
 
             // Handle proceed to payment button
@@ -448,7 +456,7 @@
                         iframe.src = data.checkoutUrl;
                         iframe.style.display = 'block';
                         
-                        // Listen for payment completion via postMessage or polling
+                        // Listen for payment completion
                         startPaymentStatusCheck(data.orderCode);
                     } else {
                         alert('Failed to create payment order: ' + (data.message || 'Unknown error'));
@@ -477,10 +485,7 @@
                     .then(data => {
                         if (data.status === 'completed') {
                             clearInterval(checkInterval);
-                            // Close modal
-                            paymentModal.hide();
-                            // Submit the form
-                            registrationForm.submit();
+                            finishRegistration(orderCode);
                         } else if (data.status === 'failed') {
                             clearInterval(checkInterval);
                             alert('Payment failed. Please try again.');
@@ -500,33 +505,42 @@
 
             // Listen for postMessage from iframe
             window.addEventListener('message', function(event) {
-                // Accept messages from our own domain (success page) or Viva
                 if (event.data && (event.data.type === 'payment_success' || event.data.type === 'payment_completed')) {
                     if (currentOrderCode) {
-                        // Verify payment status one more time
-                        fetch('{{ route("payment.check-status") }}?orderCode=' + currentOrderCode, {
-                            method: 'GET',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'completed') {
-                                paymentOrderCodeInput.value = currentOrderCode;
-                                paymentModal.hide();
-                                registrationForm.submit();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error verifying payment:', error);
-                        });
+                        verifyAndFinish(currentOrderCode);
                     }
                 } else if (event.data && event.data.type === 'payment_failed') {
                     alert('Payment failed. Please try again.');
                     paymentModal.hide();
                 }
             });
+
+            function verifyAndFinish(orderCode) {
+                fetch('{{ route("payment.check-status") }}?orderCode=' + orderCode, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed') {
+                        finishRegistration(orderCode);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verifying payment:', error);
+                });
+            }
+
+            function finishRegistration(orderCode) {
+                paymentOrderCodeInput.value = orderCode;
+                paymentModal.hide();
+                // Ensure submit happens after modal hides
+                setTimeout(() => {
+                    registrationForm.submit();
+                }, 500);
+            }
 
             // Reset modal when closed
             document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function() {

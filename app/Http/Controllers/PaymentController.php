@@ -23,10 +23,15 @@ class PaymentController extends Controller
     /**
      * Handle payment success callback
      */
+    /**
+     * Handle payment success callback
+     */
     public function success(Request $request)
     {
         // Viva Payment returns order code as 's' parameter
         $orderCode = $request->query('s') ?? $request->query('OrderCode');
+
+        Log::info('Payment success callback received', ['orderCode' => $orderCode]);
 
         if (!$orderCode) {
             // Check if this is an iframe request
@@ -41,6 +46,8 @@ class PaymentController extends Controller
         $payment = Payment::where('order_code', $orderCode)->first();
 
         if (!$payment) {
+            Log::error('Payment record not found in success callback', ['orderCode' => $orderCode]);
+
             if ($request->header('Sec-Fetch-Dest') === 'iframe' || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Payment record not found']);
             }
@@ -57,8 +64,10 @@ class PaymentController extends Controller
             // StatusId 'C' means cancelled
             if ($orderDetails['StatusId'] === 'F' || $orderDetails['StatusId'] === 'A') {
                 // Payment successful
+                Log::info('Payment verified valid via callback', ['orderCode' => $orderCode, 'status' => $orderDetails['StatusId']]);
+
                 $transactionId = $orderDetails['Transactions'][0]['TransactionId'] ?? $payment->transaction_id;
-                
+
                 $payment->update([
                     'status' => 'completed',
                     'transaction_id' => $transactionId,
@@ -83,6 +92,8 @@ class PaymentController extends Controller
                 return view('payment.success-iframe', ['orderCode' => $orderCode]);
             } else {
                 // Payment failed or cancelled
+                Log::warning('Payment verification failed via callback', ['orderCode' => $orderCode, 'status' => $orderDetails['StatusId']]);
+
                 $payment->update([
                     'status' => 'failed',
                     'payment_data' => $orderDetails,
@@ -97,6 +108,8 @@ class PaymentController extends Controller
             }
         } else {
             // Could not verify payment, but assume success if we got here
+            Log::warning('Payment verification API returned no status, assuming success', ['orderCode' => $orderCode]);
+
             $payment->update([
                 'status' => 'completed',
                 'paid_at' => now(),
@@ -142,11 +155,11 @@ class PaymentController extends Controller
         // If payment is still pending, verify with Viva
         if ($payment->status === 'pending') {
             $orderDetails = $this->vivaPayment->getOrderDetails($orderCode);
-            
+
             if ($orderDetails && isset($orderDetails['StatusId'])) {
                 if ($orderDetails['StatusId'] === 'F' || $orderDetails['StatusId'] === 'A') {
                     $transactionId = $orderDetails['Transactions'][0]['TransactionId'] ?? $payment->transaction_id;
-                    
+
                     $payment->update([
                         'status' => 'completed',
                         'transaction_id' => $transactionId,
@@ -174,6 +187,8 @@ class PaymentController extends Controller
     public function failure(Request $request)
     {
         $orderCode = $request->query('s');
+
+        Log::info('Payment failure callback received', ['orderCode' => $orderCode]);
 
         if ($orderCode) {
             $payment = Payment::where('order_code', $orderCode)->first();
