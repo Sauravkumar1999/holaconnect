@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SettingsController;
 
 // Redirect base URL to registration
 Route::get('/', function () {
@@ -34,5 +35,9 @@ Route::middleware('auth')->group(function () {
     // Admin routes
     Route::get('/registrations', [AdminController::class, 'registrations'])->name('registrations');
     Route::get('/registrations/{user}', [AdminController::class, 'registrationDetails'])->name('registration.details');
+    
+    // Settings routes (Admin only)
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
 });

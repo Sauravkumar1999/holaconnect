@@ -209,6 +209,11 @@
                             <span>All Registrations</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('settings.index') }}">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
                     </li>
                 @endif
             </ul>

@@ -255,7 +255,7 @@
                                 Payment Amount (EUR) <span class="required-mark">*</span>
                             </label>
                             <input type="number" class="form-control" id="paymentAmount" 
-                                step="0.01" min="0.01" value="{{ config('services.viva.registration_amount') }}" 
+                                step="0.01" min="0.01" value="{{ \App\Models\Setting::get('registration_payment_amount', 100.00) }}" 
                                 placeholder="Enter amount">
                             <small class="text-muted">Minimum amount: €0.30</small>
                         </div>
