@@ -16,51 +16,51 @@ class CertificateGenerationService
      */
     public function generateCertificate(string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber = 'Ireland', int $shares = 250000): string
     {
-        // Certificate dimensions
-        $width = 1920;
-        $height = 1080;
+        // Load the background certificate image
+        $bgPath = public_path('images/certificate-bg.jpg');
 
-        // Create a new image
-        $image = imagecreatetruecolor($width, $height);
+        if (!file_exists($bgPath)) {
+            throw new \Exception('Certificate background image not found');
+        }
+
+        // Create image from background
+        $image = imagecreatefromjpeg($bgPath);
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        // Enable alpha blending for transparency
         imagealphablending($image, true);
         imagesavealpha($image, true);
 
         // Define colors
-        $darkBlue = imagecolorallocate($image, 15, 47, 111);      // #0f2f6f
-        $navyBlue = imagecolorallocate($image, 30, 58, 138);      // #1e3a8a
-        $white = imagecolorallocate($image, 255, 255, 255);       // #ffffff
-        $cream = imagecolorallocate($image, 248, 245, 240);       // #f8f5f0
-        $golden = imagecolorallocate($image, 201, 169, 97);       // #c9a961
-        $lightGolden = imagecolorallocate($image, 218, 194, 139); // #dac28b
-        $brightGolden = imagecolorallocate($image, 255, 215, 0);  // #ffd700
-        $textGray = imagecolorallocate($image, 240, 235, 225);    // Light beige for texture
+        $darkBlue = imagecolorallocate($image, 15, 47, 111);  // #0f2f6f
 
-        // Fill background with dark blue
-        imagefilledrectangle($image, 0, 0, $width, $height, $darkBlue);
+        // Get fonts
+        $font = $this->getFont();
+        $scriptFont = $this->getScriptFont();
 
-        // Draw white inner rectangle (certificate body)
-        imagefilledrectangle($image, 50, 50, $width - 50, $height - 50, $cream);
+        // Calculate center
+        $centerX = $width / 2;
 
-        // Add subtle texture to the certificate body
-        $this->addTexture($image, 50, 50, $width - 50, $height - 50, $cream, $textGray);
+        // Add user name (centered, in the underlined area between the decorative dots)
+        // The underline is around Y=400, so text should be around Y=395
+        $this->drawTextWithFont($image, $userName, $centerX, 395, 42, $scriptFont, $darkBlue, 'center');
 
-        // Draw golden border frame
-        $this->drawGoldenBorderFrame($image, $width, $height, $golden, $lightGolden);
+        // Add license number "Ireland" (in the first blank after "of")
+        // Based on template: X=175, Y=435
+        $this->drawTextWithFont($image, $licenseNumber, 175, 435, 22, $font, $darkBlue, 'left');
 
-        // Add decorative corner elements (elaborate design)
-        $this->drawElaborateCorners($image, $width, $height, $golden, $lightGolden);
+        // Add shares "250,000" (in the blank before "Class A Ordinary Shares")
+        // Based on template: X=795, Y=435
+        $this->drawTextWithFont($image, number_format($shares), 795, 435, 22, $font, $darkBlue, 'left');
 
-        // Add curved decorative ribbons from corners (like the reference)
-        $this->drawCurvedCornerRibbons($image, $width, $height, $golden, $lightGolden);
+        // Add certificate number (after "CERTIFICATE NORIOATE:")
+        // Based on template: X=370, Y=535
+        $this->drawTextWithFont($image, $certificateNumber, 370, 535, 18, $font, $darkBlue, 'left');
 
-        // Add logo at top (if exists) or placeholder
-        $this->addLogo($image, $width);
-
-        // Add text content
-        $this->addTextContent($image, $width, $height, $userName, $certificateNumber, $issuedDate, $licenseNumber, $shares, $darkBlue, $golden);
-
-        // Add decorative seal/badge with ribbons
-        $this->drawElaborateSeal($image, $width, $height, $golden, $lightGolden, $brightGolden);
+        // Add date (after "DATE OF ISSUE:")
+        // Based on template: X=295, Y=570
+        $this->drawTextWithFont($image, $issuedDate, 295, 570, 18, $font, $darkBlue, 'left');
 
         // Save the certificate directly in public folder
         $fileName = 'documents/certificates/' . uniqid('cert_') . '.png';
@@ -90,7 +90,7 @@ class CertificateGenerationService
             $alpha = rand(10, 40); // Semi-transparent spots
             imagefilledellipse($image, $x, $y, $size, $size, $textureColor);
         }
-        
+
         // Add some slightly larger spots for more visible texture
         for ($i = 0; $i < 300; $i++) {
             $x = rand($x1, $x2);
@@ -188,19 +188,19 @@ class CertificateGenerationService
     private function drawCurvedCornerRibbons($image, int $width, int $height, $golden, $lightGolden): void
     {
         imagesetthickness($image, 6);
-        
+
         // Top-left to top-right curved ribbon
         $this->drawBezierCurve($image, 150, 80, 450, 60, $width - 450, 60, $width - 150, 80, $golden);
-        
+
         // Top-right to bottom-right curved ribbon (right side)
         $this->drawBezierCurve($image, $width - 80, 150, $width - 60, 450, $width - 60, $height - 450, $width - 80, $height - 150, $golden);
-        
+
         // Bottom-right to bottom-left curved ribbon
         $this->drawBezierCurve($image, $width - 150, $height - 80, $width - 450, $height - 60, 450, $height - 60, 150, $height - 80, $golden);
-        
+
         // Bottom-left to top-left curved ribbon (left side)
         $this->drawBezierCurve($image, 80, $height - 150, 60, $height - 450, 60, 450, 80, 150, $golden);
-        
+
         imagesetthickness($image, 1);
     }
 
@@ -212,7 +212,7 @@ class CertificateGenerationService
         $steps = 100;
         $prevX = $x0;
         $prevY = $y0;
-        
+
         for ($i = 1; $i <= $steps; $i++) {
             $t = $i / $steps;
             $t2 = $t * $t;
@@ -220,10 +220,10 @@ class CertificateGenerationService
             $mt = 1 - $t;
             $mt2 = $mt * $mt;
             $mt3 = $mt2 * $mt;
-            
+
             $x = $mt3 * $x0 + 3 * $mt2 * $t * $x1 + 3 * $mt * $t2 * $x2 + $t3 * $x3;
             $y = $mt3 * $y0 + 3 * $mt2 * $t * $y1 + 3 * $mt * $t2 * $y2 + $t3 * $y3;
-            
+
             imageline($image, $prevX, $prevY, $x, $y, $color);
             $prevX = $x;
             $prevY = $y;
@@ -236,26 +236,26 @@ class CertificateGenerationService
     private function addLogo($image, int $width): void
     {
         $logoPath = public_path('images/logo.png');
-        
+
         if (file_exists($logoPath)) {
             $logo = imagecreatefrompng($logoPath);
             $logoWidth = imagesx($logo);
             $logoHeight = imagesy($logo);
-            
+
             // Resize logo if needed (max 120x120)
             $maxSize = 120;
             if ($logoWidth > $maxSize || $logoHeight > $maxSize) {
                 $ratio = min($maxSize / $logoWidth, $maxSize / $logoHeight);
                 $newWidth = $logoWidth * $ratio;
                 $newHeight = $logoHeight * $ratio;
-                
+
                 $resized = imagecreatetruecolor($newWidth, $newHeight);
                 imagealphablending($resized, false);
                 imagesavealpha($resized, true);
                 $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
                 imagefill($resized, 0, 0, $transparent);
                 imagecopyresampled($resized, $logo, 0, 0, 0, 0, $newWidth, $newHeight, $logoWidth, $logoHeight);
-                
+
                 $logoX = ($width - $newWidth) / 2;
                 imagecopy($image, $resized, $logoX, 120, 0, 0, $newWidth, $newHeight);
                 imagedestroy($resized);
@@ -299,16 +299,16 @@ class CertificateGenerationService
         // Details text - first line (split for better control)
         $ofText = "of";
         $this->drawTextWithFont($image, $ofText, $centerX - 570, 650, 26, $font, $darkBlue, 'left');
-        
+
         // Ireland with underline
         $irelandX = $centerX - 520;
         $this->drawTextWithFont($image, $licenseNumber, $irelandX, 650, 26, $font, $darkBlue, 'left');
         imagefilledrectangle($image, $irelandX, 655, $irelandX + 75, 657, $darkBlue);
-        
+
         // Rest of text
         $middleText = "holding license number is the registered holder of";
         $this->drawTextWithFont($image, $middleText, $centerX - 400, 650, 26, $font, $darkBlue, 'left');
-        
+
         // Shares with underline
         $sharesX = $centerX + 380;
         $sharesText = number_format($shares);
@@ -413,35 +413,49 @@ class CertificateGenerationService
     {
         // Left ribbon
         $leftRibbon = [
-            $centerX - 50, $sealY + 55,
-            $centerX - 45, $sealY + 130,
-            $centerX - 30, $sealY + 135,
-            $centerX - 25, $sealY + 60,
+            $centerX - 50,
+            $sealY + 55,
+            $centerX - 45,
+            $sealY + 130,
+            $centerX - 30,
+            $sealY + 135,
+            $centerX - 25,
+            $sealY + 60,
         ];
         imagefilledpolygon($image, $leftRibbon, 4, $golden);
 
         // Left ribbon fold
         $leftFold = [
-            $centerX - 45, $sealY + 130,
-            $centerX - 30, $sealY + 135,
-            $centerX - 35, $sealY + 145,
+            $centerX - 45,
+            $sealY + 130,
+            $centerX - 30,
+            $sealY + 135,
+            $centerX - 35,
+            $sealY + 145,
         ];
         imagefilledpolygon($image, $leftFold, 3, $lightGolden);
 
         // Right ribbon
         $rightRibbon = [
-            $centerX + 50, $sealY + 55,
-            $centerX + 45, $sealY + 130,
-            $centerX + 30, $sealY + 135,
-            $centerX + 25, $sealY + 60,
+            $centerX + 50,
+            $sealY + 55,
+            $centerX + 45,
+            $sealY + 130,
+            $centerX + 30,
+            $sealY + 135,
+            $centerX + 25,
+            $sealY + 60,
         ];
         imagefilledpolygon($image, $rightRibbon, 4, $golden);
 
         // Right ribbon fold
         $rightFold = [
-            $centerX + 45, $sealY + 130,
-            $centerX + 30, $sealY + 135,
-            $centerX + 35, $sealY + 145,
+            $centerX + 45,
+            $sealY + 130,
+            $centerX + 30,
+            $sealY + 135,
+            $centerX + 35,
+            $sealY + 145,
         ];
         imagefilledpolygon($image, $rightFold, 3, $lightGolden);
     }
