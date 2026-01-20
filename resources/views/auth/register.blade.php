@@ -155,6 +155,13 @@
                                     <i class="fas fa-money-check-alt"></i> Pre Payment
                                 </label>
                             </label>
+                            <label class="radio-card" id="fullPaymentCard">
+                                <input type="radio" name="payment_type" value="full_payment" id="full_payment"
+                                    {{ old('payment_type') == 'full_payment' ? 'checked' : '' }} required>
+                                <label for="full_payment" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-file-invoice-dollar"></i> Full Payment
+                                </label>
+                            </label>
                             <label class="radio-card" id="newPaymentCard">
                                 <input type="radio" name="payment_type" value="new_payment" id="new_payment"
                                     {{ old('payment_type') == 'new_payment' ? 'checked' : '' }} required>
@@ -254,10 +261,9 @@
                             <label for="paymentAmount" class="form-label">
                                 Payment Amount (EUR) <span class="required-mark">*</span>
                             </label>
-                            <input type="number" class="form-control" id="paymentAmount" 
-                                step="0.01" min="0.01" value="{{ \App\Models\Setting::get('registration_payment_amount', 100.00) }}" 
-                                placeholder="Enter amount">
-                            <small class="text-muted">Minimum amount: €0.30</small>
+                            <input type="text" class="form-control" id="paymentAmount" 
+                                value="{{ \App\Models\Setting::get('registration_payment_amount') }}" 
+                                readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                         </div>
                         <div class="text-center">
                             <button type="button" class="btn-primary" id="proceedToPaymentBtn">
@@ -304,33 +310,48 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const prePaymentRadio = document.getElementById('pre_payment');
+            const fullPaymentRadio = document.getElementById('full_payment');
             const newPaymentRadio = document.getElementById('new_payment');
             const paymentReceiptField = document.getElementById('paymentReceiptField');
             const paymentReceiptInput = document.getElementById('document_payment_receipt');
             const prePaymentCard = document.getElementById('prePaymentCard');
+            const fullPaymentCard = document.getElementById('fullPaymentCard');
             const newPaymentCard = document.getElementById('newPaymentCard');
             const registrationForm = document.getElementById('registrationForm');
             const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
             const paymentOrderCodeInput = document.getElementById('payment_order_code');
+            const paymentAmountInput = document.getElementById('paymentAmount');
+            const baseAmount = parseFloat("{{ \App\Models\Setting::get('registration_payment_amount') }}") || 0;
             let currentOrderCode = null;
 
             function togglePaymentReceipt() {
+                // Reset active classes
+                prePaymentCard.classList.remove('active');
+                fullPaymentCard.classList.remove('active');
+                newPaymentCard.classList.remove('active');
+
                 if (prePaymentRadio.checked) {
+                    // Pre Payment: Upload File + Payment (Amount - 5)
                     paymentReceiptField.style.display = 'block';
                     paymentReceiptInput.required = true;
                     prePaymentCard.classList.add('active');
-                    newPaymentCard.classList.remove('active');
+                } else if (fullPaymentRadio.checked) {
+                    // Full Payment: Upload File + No Payment
+                    paymentReceiptField.style.display = 'block';
+                    paymentReceiptInput.required = true;
+                    fullPaymentCard.classList.add('active');
                 } else if (newPaymentRadio.checked) {
+                    // New Payment: No Upload + Full Payment
                     paymentReceiptField.style.display = 'none';
                     paymentReceiptInput.required = false;
                     paymentReceiptInput.value = '';
                     newPaymentCard.classList.add('active');
-                    prePaymentCard.classList.remove('active');
                 }
             }
 
             // Add event listeners
             prePaymentRadio.addEventListener('change', togglePaymentReceipt);
+            fullPaymentRadio.addEventListener('change', togglePaymentReceipt);
             newPaymentRadio.addEventListener('change', togglePaymentReceipt);
 
             // Initialize on page load
@@ -342,14 +363,24 @@
                 togglePaymentReceipt();
             });
 
+            fullPaymentCard.addEventListener('click', function() {
+                fullPaymentRadio.checked = true;
+                togglePaymentReceipt();
+            });
+
             newPaymentCard.addEventListener('click', function() {
                 newPaymentRadio.checked = true;
                 togglePaymentReceipt();
             });
 
-            // Intercept form submission for new payment
+            // Intercept form submission for payment types
             registrationForm.addEventListener('submit', function(e) {
-                if (newPaymentRadio.checked) {
+                if (newPaymentRadio.checked || prePaymentRadio.checked) {
+                    // Check if we already have a payment code (successful payment)
+                    if (paymentOrderCodeInput.value) {
+                         return; // Allow submit
+                    }
+
                     e.preventDefault();
                     
                     // Validate form first
@@ -358,9 +389,19 @@
                         return;
                     }
 
+                    // Set Payment Amount
+                    if (newPaymentRadio.checked) {
+                         paymentAmountInput.value = baseAmount.toFixed(2);
+                    } else if (prePaymentRadio.checked) {
+                         let discountedAmount = baseAmount - 5;
+                         if (discountedAmount < 0.30) discountedAmount = 0.30; // Minimum safety
+                         paymentAmountInput.value = discountedAmount.toFixed(2);
+                    }
+
                     // Show payment modal
                     paymentModal.show();
                 }
+                // Full Payment submits directly
             });
 
             // Handle proceed to payment button

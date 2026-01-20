@@ -43,9 +43,9 @@ class RegisterController extends Controller
             'taxi_driver_id' => 'nullable|string|max:255',
             'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'payment_type' => 'required|in:pre_payment,new_payment',
-            'document_payment_receipt' => 'required_if:payment_type,pre_payment|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'payment_order_code' => 'required_if:payment_type,new_payment|nullable|string',
+            'payment_type' => 'required|in:pre_payment,new_payment,full_payment',
+            'document_payment_receipt' => 'required_if:payment_type,pre_payment,full_payment|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'payment_order_code' => 'required_if:payment_type,new_payment,pre_payment|nullable|string',
             'terms_agreed' => 'required|accepted',
             'share_certificate_agreed' => 'required|accepted',
         ]);
@@ -67,10 +67,10 @@ class RegisterController extends Controller
             $documentIdentityPath = 'documents/identity/' . $fileName;
         }
 
-        // If new_payment is selected, verify payment first
-        if ($validated['payment_type'] === 'new_payment') {
+        // Verify payment if applicable (new_payment or pre_payment)
+        if (in_array($validated['payment_type'], ['new_payment', 'pre_payment'])) {
             $paymentOrderCode = $request->input('payment_order_code');
-            
+
             if (!$paymentOrderCode) {
                 return redirect()->back()
                     ->withInput()
@@ -79,43 +79,17 @@ class RegisterController extends Controller
 
             // Verify payment was successful
             $payment = Payment::where('order_code', $paymentOrderCode)->first();
-            
+
             if (!$payment || $payment->status !== 'completed') {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Payment verification failed. Please complete the payment first.');
             }
-
-            // Create the user
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'phone' => $validated['phone'],
-                'psp_number' => $validated['psp_number'] ?? null,
-                'taxi_driver_id' => $validated['taxi_driver_id'] ?? null,
-                'user_type' => 1, // User type
-                'document_dashboard_path' => $documentDashboardPath,
-                'document_identity_path' => $documentIdentityPath,
-                'document_payment_receipt_path' => null,
-                'payment_type' => 'new_payment',
-                'terms_agreed' => true,
-                'share_certificate_agreed' => true,
-            ]);
-
-            // Link payment to user
-            $payment->update(['user_id' => $user->id]);
-
-            // Log the user in
-            Auth::login($user);
-
-            // Redirect with success message
-            return redirect()->route('dashboard')->with('success', 'Payment successful! Successfully Registered! Welcome to Hola Connect.');
         }
 
-        // Handle pre_payment flow (existing logic)
+        // Handle document receipt upload (pre_payment or full_payment)
         $documentPaymentReceiptPath = null;
-        if ($request->payment_type === 'pre_payment' && $request->hasFile('document_payment_receipt')) {
+        if (in_array($validated['payment_type'], ['pre_payment', 'full_payment']) && $request->hasFile('document_payment_receipt')) {
             $file = $request->file('document_payment_receipt');
             $fileName = time() . '_receipt_' . $file->getClientOriginalName();
             $file->move(public_path('documents/payment_receipts'), $fileName);
@@ -138,6 +112,11 @@ class RegisterController extends Controller
             'terms_agreed' => true,
             'share_certificate_agreed' => true,
         ]);
+
+        // Link payment to user if applicable
+        if (isset($payment)) {
+            $payment->update(['user_id' => $user->id]);
+        }
 
         // Log the user in
         Auth::login($user);
