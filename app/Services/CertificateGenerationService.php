@@ -22,35 +22,45 @@ class CertificateGenerationService
 
         // Create a new image
         $image = imagecreatetruecolor($width, $height);
+        imagealphablending($image, true);
+        imagesavealpha($image, true);
 
         // Define colors
         $darkBlue = imagecolorallocate($image, 15, 47, 111);      // #0f2f6f
+        $navyBlue = imagecolorallocate($image, 30, 58, 138);      // #1e3a8a
         $white = imagecolorallocate($image, 255, 255, 255);       // #ffffff
+        $cream = imagecolorallocate($image, 248, 245, 240);       // #f8f5f0
         $golden = imagecolorallocate($image, 201, 169, 97);       // #c9a961
-        $lightGolden = imagecolorallocate($image, 240, 180, 40);  // #f0b428
-        $brightGolden = imagecolorallocate($image, 255, 204, 51); // #ffcc33
+        $lightGolden = imagecolorallocate($image, 218, 194, 139); // #dac28b
+        $brightGolden = imagecolorallocate($image, 255, 215, 0);  // #ffd700
+        $textGray = imagecolorallocate($image, 240, 235, 225);    // Light beige for texture
 
         // Fill background with dark blue
         imagefilledrectangle($image, 0, 0, $width, $height, $darkBlue);
 
         // Draw white inner rectangle (certificate body)
-        imagefilledrectangle($image, 60, 60, $width - 60, $height - 60, $white);
+        imagefilledrectangle($image, 50, 50, $width - 50, $height - 50, $cream);
 
-        // Draw golden borders
-        $borderWidth = 8;
-        imagefilledrectangle($image, 60, 60, $width - 60, 60 + $borderWidth, $golden);                    // Top
-        imagefilledrectangle($image, 60, $height - 60 - $borderWidth, $width - 60, $height - 60, $golden); // Bottom
-        imagefilledrectangle($image, 60, 60, 60 + $borderWidth, $height - 60, $golden);                   // Left
-        imagefilledrectangle($image, $width - 60 - $borderWidth, 60, $width - 60, $height - 60, $golden); // Right
+        // Add subtle texture to the certificate body
+        $this->addTexture($image, 50, 50, $width - 50, $height - 50, $cream, $textGray);
 
-        // Add decorative corner elements
-        $this->drawCornerDecorations($image, $width, $height, $golden);
+        // Draw golden border frame
+        $this->drawGoldenBorderFrame($image, $width, $height, $golden, $lightGolden);
+
+        // Add decorative corner elements (elaborate design)
+        $this->drawElaborateCorners($image, $width, $height, $golden, $lightGolden);
+
+        // Add curved decorative ribbons from corners (like the reference)
+        $this->drawCurvedCornerRibbons($image, $width, $height, $golden, $lightGolden);
+
+        // Add logo at top (if exists) or placeholder
+        $this->addLogo($image, $width);
 
         // Add text content
         $this->addTextContent($image, $width, $height, $userName, $certificateNumber, $issuedDate, $licenseNumber, $shares, $darkBlue, $golden);
 
-        // Add decorative seal/badge
-        $this->drawSeal($image, $width, $height, $lightGolden, $brightGolden);
+        // Add decorative seal/badge with ribbons
+        $this->drawElaborateSeal($image, $width, $height, $golden, $lightGolden, $brightGolden);
 
         // Save the certificate directly in public folder
         $fileName = 'documents/certificates/' . uniqid('cert_') . '.png';
@@ -68,28 +78,193 @@ class CertificateGenerationService
     }
 
     /**
-     * Draw corner decorations.
+     * Add subtle texture to certificate background (aged paper effect).
      */
-    private function drawCornerDecorations($image, int $width, int $height, $golden): void
+    private function addTexture($image, int $x1, int $y1, int $x2, int $y2, $baseColor, $textureColor): void
     {
-        // Simple triangular decorations in corners
-        $cornerSize = 80;
+        // Add random noise for vintage texture effect - more density
+        for ($i = 0; $i < 5000; $i++) {
+            $x = rand($x1, $x2);
+            $y = rand($y1, $y2);
+            $size = rand(1, 2);
+            $alpha = rand(10, 40); // Semi-transparent spots
+            imagefilledellipse($image, $x, $y, $size, $size, $textureColor);
+        }
+        
+        // Add some slightly larger spots for more visible texture
+        for ($i = 0; $i < 300; $i++) {
+            $x = rand($x1, $x2);
+            $y = rand($y1, $y2);
+            $size = rand(3, 6);
+            imagefilledellipse($image, $x, $y, $size, $size, $textureColor);
+        }
+    }
 
-        // Top-left corner
-        $points = [40, 40, 40 + $cornerSize, 40, 40, 40 + $cornerSize];
-        imagefilledpolygon($image, $points, 3, $golden);
+    /**
+     * Draw golden border frame around certificate.
+     */
+    private function drawGoldenBorderFrame($image, int $width, int $height, $golden, $lightGolden): void
+    {
+        $borderWidth = 10;
 
-        // Top-right corner
-        $points = [$width - 40, 40, $width - 40 - $cornerSize, 40, $width - 40, 40 + $cornerSize];
-        imagefilledpolygon($image, $points, 3, $golden);
+        // Outer golden border
+        imagefilledrectangle($image, 45, 45, $width - 45, 55, $golden);                    // Top
+        imagefilledrectangle($image, 45, $height - 55, $width - 45, $height - 45, $golden); // Bottom
+        imagefilledrectangle($image, 45, 45, 55, $height - 45, $golden);                   // Left
+        imagefilledrectangle($image, $width - 55, 45, $width - 45, $height - 45, $golden); // Right
 
-        // Bottom-left corner
-        $points = [40, $height - 40, 40 + $cornerSize, $height - 40, 40, $height - 40 - $cornerSize];
-        imagefilledpolygon($image, $points, 3, $golden);
+        // Inner lighter border for 3D effect
+        imagefilledrectangle($image, 75, 75, $width - 75, 80, $lightGolden);                    // Top inner
+        imagefilledrectangle($image, 75, $height - 80, $width - 75, $height - 75, $lightGolden); // Bottom inner
+        imagefilledrectangle($image, 75, 75, 80, $height - 75, $lightGolden);                   // Left inner
+        imagefilledrectangle($image, $width - 80, 75, $width - 75, $height - 75, $lightGolden); // Right inner
+    }
 
-        // Bottom-right corner
-        $points = [$width - 40, $height - 40, $width - 40 - $cornerSize, $height - 40, $width - 40, $height - 40 - $cornerSize];
-        imagefilledpolygon($image, $points, 3, $golden);
+    /**
+     * Draw elaborate corner decorations.
+     */
+    private function drawElaborateCorners($image, int $width, int $height, $golden, $lightGolden): void
+    {
+        $cornerSize = 150;
+
+        // Top-left elaborate corner
+        $this->drawFancyCorner($image, 30, 30, $cornerSize, 'top-left', $golden, $lightGolden);
+
+        // Top-right elaborate corner
+        $this->drawFancyCorner($image, $width - 30, 30, $cornerSize, 'top-right', $golden, $lightGolden);
+
+        // Bottom-left elaborate corner
+        $this->drawFancyCorner($image, 30, $height - 30, $cornerSize, 'bottom-left', $golden, $lightGolden);
+
+        // Bottom-right elaborate corner
+        $this->drawFancyCorner($image, $width - 30, $height - 30, $cornerSize, 'bottom-right', $golden, $lightGolden);
+    }
+
+    /**
+     * Draw a single fancy corner decoration.
+     */
+    private function drawFancyCorner($image, int $x, int $y, int $size, string $position, $golden, $lightGolden): void
+    {
+        $large = $size;
+        $medium = $size * 0.6;
+        $small = $size * 0.3;
+
+        switch ($position) {
+            case 'top-left':
+                // Large triangle
+                $points = [$x, $y, $x + $large, $y, $x, $y + $large];
+                imagefilledpolygon($image, $points, 3, $golden);
+                // Medium triangle overlay
+                $points = [$x + 10, $y + 10, $x + $medium, $y + 10, $x + 10, $y + $medium];
+                imagefilledpolygon($image, $points, 3, $lightGolden);
+                break;
+
+            case 'top-right':
+                $points = [$x, $y, $x - $large, $y, $x, $y + $large];
+                imagefilledpolygon($image, $points, 3, $golden);
+                $points = [$x - 10, $y + 10, $x - $medium, $y + 10, $x - 10, $y + $medium];
+                imagefilledpolygon($image, $points, 3, $lightGolden);
+                break;
+
+            case 'bottom-left':
+                $points = [$x, $y, $x + $large, $y, $x, $y - $large];
+                imagefilledpolygon($image, $points, 3, $golden);
+                $points = [$x + 10, $y - 10, $x + $medium, $y - 10, $x + 10, $y - $medium];
+                imagefilledpolygon($image, $points, 3, $lightGolden);
+                break;
+
+            case 'bottom-right':
+                $points = [$x, $y, $x - $large, $y, $x, $y - $large];
+                imagefilledpolygon($image, $points, 3, $golden);
+                $points = [$x - 10, $y - 10, $x - $medium, $y - 10, $x - 10, $y - $medium];
+                imagefilledpolygon($image, $points, 3, $lightGolden);
+                break;
+        }
+    }
+
+    /**
+     * Draw curved decorative ribbons from corners (matching reference design).
+     */
+    private function drawCurvedCornerRibbons($image, int $width, int $height, $golden, $lightGolden): void
+    {
+        imagesetthickness($image, 6);
+        
+        // Top-left to top-right curved ribbon
+        $this->drawBezierCurve($image, 150, 80, 450, 60, $width - 450, 60, $width - 150, 80, $golden);
+        
+        // Top-right to bottom-right curved ribbon (right side)
+        $this->drawBezierCurve($image, $width - 80, 150, $width - 60, 450, $width - 60, $height - 450, $width - 80, $height - 150, $golden);
+        
+        // Bottom-right to bottom-left curved ribbon
+        $this->drawBezierCurve($image, $width - 150, $height - 80, $width - 450, $height - 60, 450, $height - 60, 150, $height - 80, $golden);
+        
+        // Bottom-left to top-left curved ribbon (left side)
+        $this->drawBezierCurve($image, 80, $height - 150, 60, $height - 450, 60, 450, 80, 150, $golden);
+        
+        imagesetthickness($image, 1);
+    }
+
+    /**
+     * Draw a bezier curve (cubic).
+     */
+    private function drawBezierCurve($image, $x0, $y0, $x1, $y1, $x2, $y2, $x3, $y3, $color): void
+    {
+        $steps = 100;
+        $prevX = $x0;
+        $prevY = $y0;
+        
+        for ($i = 1; $i <= $steps; $i++) {
+            $t = $i / $steps;
+            $t2 = $t * $t;
+            $t3 = $t2 * $t;
+            $mt = 1 - $t;
+            $mt2 = $mt * $mt;
+            $mt3 = $mt2 * $mt;
+            
+            $x = $mt3 * $x0 + 3 * $mt2 * $t * $x1 + 3 * $mt * $t2 * $x2 + $t3 * $x3;
+            $y = $mt3 * $y0 + 3 * $mt2 * $t * $y1 + 3 * $mt * $t2 * $y2 + $t3 * $y3;
+            
+            imageline($image, $prevX, $prevY, $x, $y, $color);
+            $prevX = $x;
+            $prevY = $y;
+        }
+    }
+
+    /**
+     * Add logo at the top of certificate.
+     */
+    private function addLogo($image, int $width): void
+    {
+        $logoPath = public_path('images/logo.png');
+        
+        if (file_exists($logoPath)) {
+            $logo = imagecreatefrompng($logoPath);
+            $logoWidth = imagesx($logo);
+            $logoHeight = imagesy($logo);
+            
+            // Resize logo if needed (max 120x120)
+            $maxSize = 120;
+            if ($logoWidth > $maxSize || $logoHeight > $maxSize) {
+                $ratio = min($maxSize / $logoWidth, $maxSize / $logoHeight);
+                $newWidth = $logoWidth * $ratio;
+                $newHeight = $logoHeight * $ratio;
+                
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
+                imagealphablending($resized, false);
+                imagesavealpha($resized, true);
+                $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+                imagefill($resized, 0, 0, $transparent);
+                imagecopyresampled($resized, $logo, 0, 0, 0, 0, $newWidth, $newHeight, $logoWidth, $logoHeight);
+                
+                $logoX = ($width - $newWidth) / 2;
+                imagecopy($image, $resized, $logoX, 120, 0, 0, $newWidth, $newHeight);
+                imagedestroy($resized);
+            } else {
+                $logoX = ($width - $logoWidth) / 2;
+                imagecopy($image, $logo, $logoX, 120, 0, 0, $logoWidth, $logoHeight);
+            }
+            imagedestroy($logo);
+        }
     }
 
     /**
@@ -98,118 +273,193 @@ class CertificateGenerationService
     private function addTextContent($image, int $width, int $height, string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber, int $shares, $darkBlue, $golden): void
     {
         $centerX = $width / 2;
-
-        // Use default font (can be replaced with TTF fonts if available)
-        $font = 5; // Built-in large font
+        $font = $this->getFont();
+        $scriptFont = $this->getScriptFont();
 
         // Title: SHARE CERTIFICATE
-        $text = 'SHARE CERTIFICATE';
-        $this->drawCenteredText($image, $text, $centerX, 180, 5, $darkBlue);
+        $this->drawTextWithFont($image, 'SHARE CERTIFICATE', $centerX, 280, 72, $font, $darkBlue, 'center');
 
         // Company name
-        $text = 'COMPANY NAME: HOLA TAXI IRELAND LIMITED';
-        $this->drawCenteredText($image, $text, $centerX, 260, 4, $darkBlue);
+        $this->drawTextWithFont($image, 'COMPANY NAME: HOLA TAXI IRELAND LIMITED', $centerX, 350, 30, $font, $darkBlue, 'center');
 
         // "THIS IS TO CERTIFY THAT"
-        $text = 'THIS IS TO CERTIFY THAT';
-        $this->drawCenteredText($image, $text, $centerX, 350, 4, $darkBlue);
+        $this->drawTextWithFont($image, 'THIS IS TO CERTIFY THAT', $centerX, 440, 32, $font, $darkBlue, 'center');
 
-        // User name (larger and emphasized)
-        $this->drawCenteredText($image, $userName, $centerX, 450, 5, $darkBlue);
+        // User name in script/cursive font (larger and more prominent)
+        $this->drawTextWithFont($image, $userName, $centerX, 560, 85, $scriptFont, $darkBlue, 'center');
 
-        // Underline for name
-        imagefilledrectangle($image, $centerX - 400, 480, $centerX + 400, 483, $darkBlue);
+        // Underline for name with decorative dots and thicker line
+        $underlineY = 580;
+        imagesetthickness($image, 4);
+        imageline($image, $centerX - 550, $underlineY, $centerX + 550, $underlineY, $darkBlue);
+        imagesetthickness($image, 1);
+        imagefilledellipse($image, $centerX - 550, $underlineY, 12, 12, $darkBlue);
+        imagefilledellipse($image, $centerX + 550, $underlineY, 12, 12, $darkBlue);
 
-        // Details text
-        $detailsText = "of $licenseNumber holding license number is the registered holder of " . number_format($shares);
-        $this->drawCenteredText($image, $detailsText, $centerX, 540, 3, $darkBlue);
+        // Details text - first line (split for better control)
+        $ofText = "of";
+        $this->drawTextWithFont($image, $ofText, $centerX - 570, 650, 26, $font, $darkBlue, 'left');
+        
+        // Ireland with underline
+        $irelandX = $centerX - 520;
+        $this->drawTextWithFont($image, $licenseNumber, $irelandX, 650, 26, $font, $darkBlue, 'left');
+        imagefilledrectangle($image, $irelandX, 655, $irelandX + 75, 657, $darkBlue);
+        
+        // Rest of text
+        $middleText = "holding license number is the registered holder of";
+        $this->drawTextWithFont($image, $middleText, $centerX - 400, 650, 26, $font, $darkBlue, 'left');
+        
+        // Shares with underline
+        $sharesX = $centerX + 380;
+        $sharesText = number_format($shares);
+        $this->drawTextWithFont($image, $sharesText, $sharesX, 650, 26, $font, $darkBlue, 'left');
+        imagefilledrectangle($image, $sharesX, 655, $sharesX + 90, 657, $darkBlue);
 
-        $text = 'Class A Ordinary Shares in the capital of Hola Taxi Ireland Limited.';
-        $this->drawCenteredText($image, $text, $centerX, 580, 3, $darkBlue);
+        // Details text - second line
+        $line2 = 'Class A Ordinary Shares in the capital of Hola Taxi Ireland Limited.';
+        $this->drawTextWithFont($image, $line2, $centerX, 700, 26, $font, $darkBlue, 'center');
 
         // Certificate details at bottom left
-        $leftX = 200;
-        $bottomY = 850;
+        $leftX = 175;
+        $bottomY = 900;
 
-        imagettftext($image, 18, 0, $leftX, $bottomY, $darkBlue, $this->getFont(), 'CERTIFICATE NO:');
-        imagettftext($image, 18, 0, $leftX + 200, $bottomY, $darkBlue, $this->getFont(), $certificateNumber);
+        $this->drawTextWithFont($image, 'CERTIFICATE NO:', $leftX, $bottomY, 22, $font, $darkBlue, 'left');
+        $this->drawTextWithFont($image, $certificateNumber, $leftX + 250, $bottomY, 22, $font, $darkBlue, 'left');
 
-        imagettftext($image, 18, 0, $leftX, $bottomY + 40, $darkBlue, $this->getFont(), 'DATE OF ISSUE:');
-        imagettftext($image, 18, 0, $leftX + 200, $bottomY + 40, $darkBlue, $this->getFont(), $issuedDate);
+        $this->drawTextWithFont($image, 'DATE OF ISSUE:', $leftX, $bottomY + 50, 22, $font, $darkBlue, 'left');
+        $this->drawTextWithFont($image, $issuedDate, $leftX + 250, $bottomY + 50, 22, $font, $darkBlue, 'left');
 
         // Director signature section (bottom right)
-        $rightX = $width - 350;
-        imagettftext($image, 24, 0, $rightX, $bottomY, $darkBlue, $this->getFont(), 'Kamal S Gill');
+        $rightX = $width - 400;
+        $this->drawTextWithFont($image, 'Kamal S Gill', $rightX, $bottomY, 36, $scriptFont, $darkBlue, 'center');
 
         // Underline for signature
-        imagefilledrectangle($image, $rightX - 50, $bottomY + 10, $rightX + 200, $bottomY + 12, $darkBlue);
+        imagefilledrectangle($image, $rightX - 150, $bottomY + 10, $rightX + 150, $bottomY + 12, $darkBlue);
 
-        imagettftext($image, 18, 0, $rightX + 30, $bottomY + 60, $darkBlue, $this->getFont(), 'DIRECTOR');
+        $this->drawTextWithFont($image, 'DIRECTOR', $rightX, $bottomY + 70, 22, $font, $darkBlue, 'center');
     }
 
     /**
-     * Draw centered text.
+     * Draw text with TTF font.
      */
-    private function drawCenteredText($image, string $text, int $centerX, int $y, int $font, $color): void
+    private function drawTextWithFont($image, string $text, int $x, int $y, int $size, string $fontPath, $color, string $align = 'left'): void
     {
-        $fontPath = $this->getFont();
-
         if (file_exists($fontPath)) {
-            $fontSize = $font == 5 ? 48 : ($font == 4 ? 32 : 24);
-            $bbox = imagettfbbox($fontSize, 0, $fontPath, $text);
+            $bbox = imagettfbbox($size, 0, $fontPath, $text);
             $textWidth = $bbox[2] - $bbox[0];
-            $x = $centerX - ($textWidth / 2);
-            imagettftext($image, $fontSize, 0, $x, $y, $color, $fontPath, $text);
+
+            if ($align === 'center') {
+                $x = $x - ($textWidth / 2);
+            } elseif ($align === 'right') {
+                $x = $x - $textWidth;
+            }
+
+            imagettftext($image, $size, 0, $x, $y, $color, $fontPath, $text);
         } else {
             // Fallback to built-in font
-            $textWidth = imagefontwidth($font) * strlen($text);
-            $x = $centerX - ($textWidth / 2);
-            imagestring($image, $font, $x, $y, $text, $color);
+            $fontNum = 5;
+            $textWidth = imagefontwidth($fontNum) * strlen($text);
+
+            if ($align === 'center') {
+                $x = $x - ($textWidth / 2);
+            } elseif ($align === 'right') {
+                $x = $x - $textWidth;
+            }
+
+            imagestring($image, $fontNum, $x, $y, $text, $color);
         }
     }
 
     /**
-     * Draw decorative seal/badge.
+     * Draw elaborate seal/badge with sun rays and ribbons.
      */
-    private function drawSeal($image, int $width, int $height, $lightGolden, $brightGolden): void
+    private function drawElaborateSeal($image, int $width, int $height, $golden, $lightGolden, $brightGolden): void
     {
         $centerX = $width / 2;
-        $sealY = 750;
-        $radius = 60;
+        $sealY = 800;
+        $radius = 70;
 
-        // Outer circle
-        imagefilledellipse($image, $centerX, $sealY, $radius * 2, $radius * 2, $lightGolden);
+        // Draw sun rays emanating from seal
+        $rayCount = 24;
+        for ($i = 0; $i < $rayCount; $i++) {
+            $angle = ($i / $rayCount) * 2 * M_PI;
+            $x1 = $centerX + cos($angle) * ($radius - 10);
+            $y1 = $sealY + sin($angle) * ($radius - 10);
+            $x2 = $centerX + cos($angle) * ($radius + 30);
+            $y2 = $sealY + sin($angle) * ($radius + 30);
 
-        // Inner circle
-        imagefilledellipse($image, $centerX, $sealY, ($radius - 15) * 2, ($radius - 15) * 2, $brightGolden);
+            imagesetthickness($image, 3);
+            imageline($image, $x1, $y1, $x2, $y2, $golden);
+        }
+        imagesetthickness($image, 1);
 
-        // Add ribbon-like decorations
-        $ribbonPoints = [
-            $centerX - 40, $sealY + 50,
-            $centerX - 30, $sealY + 100,
-            $centerX - 20, $sealY + 50,
-        ];
-        imagefilledpolygon($image, $ribbonPoints, 3, $lightGolden);
+        // Outer circle (darker golden)
+        imagefilledellipse($image, $centerX, $sealY, $radius * 2, $radius * 2, $golden);
 
-        $ribbonPoints = [
-            $centerX + 40, $sealY + 50,
-            $centerX + 30, $sealY + 100,
-            $centerX + 20, $sealY + 50,
-        ];
-        imagefilledpolygon($image, $ribbonPoints, 3, $lightGolden);
+        // Middle circle (lighter golden)
+        imagefilledellipse($image, $centerX, $sealY, ($radius - 10) * 2, ($radius - 10) * 2, $lightGolden);
+
+        // Inner circle (bright golden)
+        imagefilledellipse($image, $centerX, $sealY, ($radius - 20) * 2, ($radius - 20) * 2, $brightGolden);
+
+        // Add wavy ribbons at bottom
+        $this->drawRibbons($image, $centerX, $sealY, $golden, $lightGolden);
     }
 
     /**
-     * Get font path (tries multiple common locations).
+     * Draw decorative ribbons below seal.
+     */
+    private function drawRibbons($image, int $centerX, int $sealY, $golden, $lightGolden): void
+    {
+        // Left ribbon
+        $leftRibbon = [
+            $centerX - 50, $sealY + 55,
+            $centerX - 45, $sealY + 130,
+            $centerX - 30, $sealY + 135,
+            $centerX - 25, $sealY + 60,
+        ];
+        imagefilledpolygon($image, $leftRibbon, 4, $golden);
+
+        // Left ribbon fold
+        $leftFold = [
+            $centerX - 45, $sealY + 130,
+            $centerX - 30, $sealY + 135,
+            $centerX - 35, $sealY + 145,
+        ];
+        imagefilledpolygon($image, $leftFold, 3, $lightGolden);
+
+        // Right ribbon
+        $rightRibbon = [
+            $centerX + 50, $sealY + 55,
+            $centerX + 45, $sealY + 130,
+            $centerX + 30, $sealY + 135,
+            $centerX + 25, $sealY + 60,
+        ];
+        imagefilledpolygon($image, $rightRibbon, 4, $golden);
+
+        // Right ribbon fold
+        $rightFold = [
+            $centerX + 45, $sealY + 130,
+            $centerX + 30, $sealY + 135,
+            $centerX + 35, $sealY + 145,
+        ];
+        imagefilledpolygon($image, $rightFold, 3, $lightGolden);
+    }
+
+    /**
+     * Get regular font path (tries multiple common locations).
      */
     private function getFont(): string
     {
         $fontPaths = [
-            public_path('fonts/arial.ttf'),
-            public_path('fonts/Arial.ttf'),
-            'C:/Windows/Fonts/arial.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/System/Library/Fonts/Helvetica.ttc',
+            public_path('fonts/times.ttf'),
+            public_path('fonts/TimesNewRoman.ttf'),
+            public_path('fonts/georgia.ttf'),
+            'C:/Windows/Fonts/times.ttf',
+            'C:/Windows/Fonts/timesbd.ttf',
+            'C:/Windows/Fonts/georgia.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
+            '/System/Library/Fonts/Times New Roman.ttf',
         ];
 
         foreach ($fontPaths as $path) {
@@ -218,8 +468,45 @@ class CertificateGenerationService
             }
         }
 
-        // Return first path as fallback (will be handled in drawCenteredText)
+        // Fallback to Arial
+        $arialPaths = [
+            'C:/Windows/Fonts/arial.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/System/Library/Fonts/Helvetica.ttc',
+        ];
+
+        foreach ($arialPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
         return $fontPaths[0];
+    }
+
+    /**
+     * Get script/cursive font path for names.
+     */
+    private function getScriptFont(): string
+    {
+        $fontPaths = [
+            public_path('fonts/GreatVibes.ttf'),
+            public_path('fonts/Pacifico.ttf'),
+            public_path('fonts/DancingScript.ttf'),
+            public_path('fonts/script.ttf'),
+            'C:/Windows/Fonts/SCRIPTBL.TTF', // Script MT Bold
+            'C:/Windows/Fonts/BRUSHSCI.TTF', // Brush Script MT
+            'C:/Windows/Fonts/FRSCRIPT.TTF', // French Script MT
+        ];
+
+        foreach ($fontPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        // Fallback to regular font with italic
+        return $this->getFont();
     }
 
     /**
