@@ -9,6 +9,7 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "spatie/browsershot": "^5.2",
         "yajra/laravel-datatables-html": "^12.6",
         "yajra/laravel-datatables-oracle": "^12.6"
     },
