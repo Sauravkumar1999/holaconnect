@@ -37,7 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/registrations/{user}', [AdminController::class, 'registrationDetails'])->name('registration.details');
     Route::post('/registrations/{user}/accept', [AdminController::class, 'acceptApplication'])->name('registration.accept');
     Route::post('/registrations/{user}/reject', [AdminController::class, 'rejectApplication'])->name('registration.reject');
-    
+    Route::post('/registrations/{user}/reaccept', [AdminController::class, 'reacceptApplication'])->name('registration.reaccept');
+
     // Settings routes (Admin only)
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

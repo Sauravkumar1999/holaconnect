@@ -80,6 +80,14 @@ class AdminController extends Controller
                                     <i class="fas fa-times-circle"></i> Reject
                                 </a>
                             </li>';
+                    } elseif ($user->application_status == 'accepted') {
+                        $dropdown .= '
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-warning reaccept-application" href="javascript:void(0)" data-user-id="' . $user->id . '">
+                                    <i class="fas fa-redo"></i> Re-accept
+                                </a>
+                            </li>';
                     }
 
                     $dropdown .= '
@@ -255,6 +263,62 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reject application: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Re-accept a user's application and regenerate certificate.
+     */
+    public function reacceptApplication(Request $request, User $user, CertificateGenerationService $certificateService)
+    {
+        // Only allow re-accept if already accepted
+        if ($user->application_status !== 'accepted') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This application must be in accepted status to re-accept.'
+            ], 400);
+        }
+
+        try {
+            // Delete old certificate file if it exists
+            if ($user->certificate_path) {
+                $oldCertificatePath = public_path($user->certificate_path);
+                if (file_exists($oldCertificatePath)) {
+                    unlink($oldCertificatePath);
+                }
+            }
+
+            // Generate new certificate number
+            $certificateNumber = $certificateService->generateCertificateNumber($user->id);
+
+            // Generate certificate date
+            $issuedDate = now()->format('d M Y');
+
+            // Generate new certificate image
+            $certificatePath = $certificateService->generateCertificate(
+                $user->name,
+                $certificateNumber,
+                $issuedDate,
+                'Ireland',
+                250000
+            );
+
+            // Update user record with new certificate
+            $user->update([
+                'certificate_path' => $certificatePath,
+                'certificate_number' => $certificateNumber,
+                'certificate_issued_date' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Application re-accepted successfully and new certificate generated.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to re-accept application: ' . $e->getMessage()
             ], 500);
         }
     }

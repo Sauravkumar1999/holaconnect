@@ -274,5 +274,68 @@
                 }
             });
         });
+
+        // Re-accept application handler
+        $(document).on('click', '.reaccept-application', function() {
+            let userId = $(this).data('user-id');
+            let url = '/registrations/' + userId + '/reaccept';
+
+            Swal.fire({
+                title: 'Re-accept Application?',
+                html: 'This will:<br><ul class="text-start"><li>Delete the old certificate</li><li>Generate a new certificate with a new number</li></ul>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Re-accept',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Deleting old certificate and generating new one, please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: res.message,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+
+                            // Reload DataTable
+                            if (window.LaravelDataTables && window.LaravelDataTables['registrations-table']) {
+                                window.LaravelDataTables['registrations-table'].ajax.reload(null, false);
+                            }
+                        },
+                        error: function(xhr) {
+                            let message = 'Failed to re-accept application';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: message
+                            });
+                        }
+                    });
+                }
+            });
+        });
     </script>
 @endpush

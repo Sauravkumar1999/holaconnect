@@ -6,7 +6,7 @@
     <div class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header">
-                <h1><i class="fas fa-taxi"></i> Hola Taxi Ireland</h1>
+                <h1><i class="fas fa-taxi"></i> Hola Connect</h1>
                 <p>Welcome Back!</p>
             </div>
 
@@ -32,8 +32,9 @@
                         <label for="email" class="form-label">
                             Email Address <span class="required-mark">*</span>
                         </label>
-                        <input type="email" class="form-control form-control-lg @error('email') is-invalid @enderror" id="email"
-                            name="email" value="{{ old('email') }}" required autofocus placeholder="your.email@example.com">
+                        <input type="email" class="form-control form-control-lg @error('email') is-invalid @enderror"
+                            id="email" name="email" value="{{ old('email') }}" required autofocus
+                            placeholder="your.email@example.com">
                         @error('email')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -44,8 +45,8 @@
                         <label for="password" class="form-label">
                             Password <span class="required-mark">*</span>
                         </label>
-                        <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" id="password"
-                            name="password" required placeholder="Enter your password">
+                        <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror"
+                            id="password" name="password" required placeholder="Enter your password">
                         @error('password')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
