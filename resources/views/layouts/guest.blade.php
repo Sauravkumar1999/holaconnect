@@ -218,19 +218,20 @@
 
         .payment-type-wrapper {
             display: flex;
-            gap: 1.5rem;
+            gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
 
         .radio-card {
             flex: 1;
             border: 2px solid #e1e8ed;
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 8px;
+            padding: 0.5rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
         .radio-card:hover {
@@ -239,9 +240,15 @@
         }
 
         .radio-card input[type="radio"] {
-            margin-right: 0.75rem;
-            width: 1.25rem;
-            height: 1.25rem;
+            margin-right: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .radio-card label {
+            font-size: 0.85rem;
+            margin: 0;
             cursor: pointer;
         }
 
