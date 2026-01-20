@@ -20,10 +20,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">{{ $title }}</div>
-            <div class="card-body">
-                <div class="row mb-3 g-2 align-items-end">
+        <div class="card px-0">
+            <div class="card-body px-0">
+                <div class="row px-2 mb-3 g-2 align-items-end">
                     <!-- Date Range -->
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Date Range</label>

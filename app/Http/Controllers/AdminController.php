@@ -45,24 +45,29 @@ class AdminController extends Controller
                         <i class="fas fa-eye"></i> View
                     </a>';
                 })
-                ->addColumn('documents', function ($user) {
-                    $documents = [];
+                ->addColumn('document_dashboard', function ($user) {
                     if ($user->document_dashboard_path) {
-                        $documents[] = '<a href="' . asset($user->document_dashboard_path) . '" target="_blank" class="text-primary me-2">
-                            <i class="fas fa-file-alt"></i> Dashboard
+                        return '<a href="' . asset($user->document_dashboard_path) . '" target="_blank" class="text-primary" title="View Dashboard Document">
+                            <i class="fas fa-file-alt"></i>
                         </a>';
                     }
+                    return '<span class="text-muted"><i class="fas fa-times"></i></span>';
+                })
+                ->addColumn('document_identity', function ($user) {
                     if ($user->document_identity_path) {
-                        $documents[] = '<a href="' . asset($user->document_identity_path) . '" target="_blank" class="text-primary me-2">
-                            <i class="fas fa-id-card"></i> Identity
+                        return '<a href="' . asset($user->document_identity_path) . '" target="_blank" class="text-primary" title="View Identity Document">
+                            <i class="fas fa-id-card"></i>
                         </a>';
                     }
+                    return '<span class="text-muted"><i class="fas fa-times"></i></span>';
+                })
+                ->addColumn('document_receipt', function ($user) {
                     if ($user->document_payment_receipt_path) {
-                        $documents[] = '<a href="' . asset($user->document_payment_receipt_path) . '" target="_blank" class="text-primary me-2">
-                            <i class="fas fa-receipt"></i> Receipt
+                        return '<a href="' . asset($user->document_payment_receipt_path) . '" target="_blank" class="text-primary" title="View Payment Receipt">
+                            <i class="fas fa-receipt"></i>
                         </a>';
                     }
-                    return !empty($documents) ? implode('', $documents) : '<span class="text-muted">No documents</span>';
+                    return '<span class="text-muted"><i class="fas fa-times"></i></span>';
                 })
                 ->editColumn('payment_type', function ($user) {
                     $badgeClass = $user->payment_type === 'pre_payment' ? 'bg-primary' : 'bg-success';
@@ -77,7 +82,7 @@ class AdminController extends Controller
                 ->editColumn('created_at', function ($user) {
                     return $user->created_at->format('d M Y, h:i A');
                 })
-                ->rawColumns(['action', 'documents', 'payment_type'])
+                ->rawColumns(['action', 'document_dashboard', 'document_identity', 'document_receipt', 'payment_type'])
                 ->make(true);
         }
 
@@ -91,7 +96,9 @@ class AdminController extends Controller
                 Column::make('psp_number')->title('PSP Number'),
                 Column::make('taxi_driver_id')->title('Taxi Driver ID'),
                 Column::make('payment_type')->title('Payment Type'),
-                Column::make('documents')->title('Documents')->orderable(false)->searchable(false),
+                Column::make('document_dashboard')->title('<i class="fas fa-file-alt"></i> Dashboard')->orderable(false)->searchable(false)->addClass('text-center'),
+                Column::make('document_identity')->title('<i class="fas fa-id-card"></i> Identity')->orderable(false)->searchable(false)->addClass('text-center'),
+                Column::make('document_receipt')->title('<i class="fas fa-receipt"></i> Receipt')->orderable(false)->searchable(false)->addClass('text-center'),
                 Column::make('created_at')->title('Registered At'),
                 Column::computed('action')
                     ->exportable(false)
