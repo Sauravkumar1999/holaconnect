@@ -52,19 +52,19 @@ class CertificateGenerationService
         // Add decorative seal/badge
         $this->drawSeal($image, $width, $height, $lightGolden, $brightGolden);
 
-        // Save the certificate
-        $fileName = 'certificates/' . uniqid('cert_') . '.png';
-        $storagePath = storage_path('app/public/' . $fileName);
+        // Save the certificate directly in public folder
+        $fileName = 'documents/certificates/' . uniqid('cert_') . '.png';
+        $publicPath = public_path($fileName);
 
         // Ensure directory exists
-        if (!file_exists(dirname($storagePath))) {
-            mkdir(dirname($storagePath), 0755, true);
+        if (!file_exists(dirname($publicPath))) {
+            mkdir(dirname($publicPath), 0755, true);
         }
 
-        imagepng($image, $storagePath);
+        imagepng($image, $publicPath);
         imagedestroy($image);
 
-        return 'storage/' . $fileName;
+        return $fileName;
     }
 
     /**
@@ -74,19 +74,19 @@ class CertificateGenerationService
     {
         // Simple triangular decorations in corners
         $cornerSize = 80;
-        
+
         // Top-left corner
         $points = [40, 40, 40 + $cornerSize, 40, 40, 40 + $cornerSize];
         imagefilledpolygon($image, $points, 3, $golden);
-        
+
         // Top-right corner
         $points = [$width - 40, 40, $width - 40 - $cornerSize, 40, $width - 40, 40 + $cornerSize];
         imagefilledpolygon($image, $points, 3, $golden);
-        
+
         // Bottom-left corner
         $points = [40, $height - 40, 40 + $cornerSize, $height - 40, 40, $height - 40 - $cornerSize];
         imagefilledpolygon($image, $points, 3, $golden);
-        
+
         // Bottom-right corner
         $points = [$width - 40, $height - 40, $width - 40 - $cornerSize, $height - 40, $width - 40, $height - 40 - $cornerSize];
         imagefilledpolygon($image, $points, 3, $golden);
@@ -98,52 +98,52 @@ class CertificateGenerationService
     private function addTextContent($image, int $width, int $height, string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber, int $shares, $darkBlue, $golden): void
     {
         $centerX = $width / 2;
-        
+
         // Use default font (can be replaced with TTF fonts if available)
         $font = 5; // Built-in large font
-        
+
         // Title: SHARE CERTIFICATE
         $text = 'SHARE CERTIFICATE';
         $this->drawCenteredText($image, $text, $centerX, 180, 5, $darkBlue);
-        
+
         // Company name
         $text = 'COMPANY NAME: HOLA TAXI IRELAND LIMITED';
         $this->drawCenteredText($image, $text, $centerX, 260, 4, $darkBlue);
-        
+
         // "THIS IS TO CERTIFY THAT"
         $text = 'THIS IS TO CERTIFY THAT';
         $this->drawCenteredText($image, $text, $centerX, 350, 4, $darkBlue);
-        
+
         // User name (larger and emphasized)
         $this->drawCenteredText($image, $userName, $centerX, 450, 5, $darkBlue);
-        
+
         // Underline for name
         imagefilledrectangle($image, $centerX - 400, 480, $centerX + 400, 483, $darkBlue);
-        
+
         // Details text
         $detailsText = "of $licenseNumber holding license number is the registered holder of " . number_format($shares);
         $this->drawCenteredText($image, $detailsText, $centerX, 540, 3, $darkBlue);
-        
+
         $text = 'Class A Ordinary Shares in the capital of Hola Taxi Ireland Limited.';
         $this->drawCenteredText($image, $text, $centerX, 580, 3, $darkBlue);
-        
+
         // Certificate details at bottom left
         $leftX = 200;
         $bottomY = 850;
-        
+
         imagettftext($image, 18, 0, $leftX, $bottomY, $darkBlue, $this->getFont(), 'CERTIFICATE NO:');
         imagettftext($image, 18, 0, $leftX + 200, $bottomY, $darkBlue, $this->getFont(), $certificateNumber);
-        
+
         imagettftext($image, 18, 0, $leftX, $bottomY + 40, $darkBlue, $this->getFont(), 'DATE OF ISSUE:');
         imagettftext($image, 18, 0, $leftX + 200, $bottomY + 40, $darkBlue, $this->getFont(), $issuedDate);
-        
+
         // Director signature section (bottom right)
         $rightX = $width - 350;
         imagettftext($image, 24, 0, $rightX, $bottomY, $darkBlue, $this->getFont(), 'Kamal S Gill');
-        
+
         // Underline for signature
         imagefilledrectangle($image, $rightX - 50, $bottomY + 10, $rightX + 200, $bottomY + 12, $darkBlue);
-        
+
         imagettftext($image, 18, 0, $rightX + 30, $bottomY + 60, $darkBlue, $this->getFont(), 'DIRECTOR');
     }
 
@@ -153,7 +153,7 @@ class CertificateGenerationService
     private function drawCenteredText($image, string $text, int $centerX, int $y, int $font, $color): void
     {
         $fontPath = $this->getFont();
-        
+
         if (file_exists($fontPath)) {
             $fontSize = $font == 5 ? 48 : ($font == 4 ? 32 : 24);
             $bbox = imagettfbbox($fontSize, 0, $fontPath, $text);
@@ -176,13 +176,13 @@ class CertificateGenerationService
         $centerX = $width / 2;
         $sealY = 750;
         $radius = 60;
-        
+
         // Outer circle
         imagefilledellipse($image, $centerX, $sealY, $radius * 2, $radius * 2, $lightGolden);
-        
+
         // Inner circle
         imagefilledellipse($image, $centerX, $sealY, ($radius - 15) * 2, ($radius - 15) * 2, $brightGolden);
-        
+
         // Add ribbon-like decorations
         $ribbonPoints = [
             $centerX - 40, $sealY + 50,
@@ -190,7 +190,7 @@ class CertificateGenerationService
             $centerX - 20, $sealY + 50,
         ];
         imagefilledpolygon($image, $ribbonPoints, 3, $lightGolden);
-        
+
         $ribbonPoints = [
             $centerX + 40, $sealY + 50,
             $centerX + 30, $sealY + 100,
@@ -211,13 +211,13 @@ class CertificateGenerationService
             '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
             '/System/Library/Fonts/Helvetica.ttc',
         ];
-        
+
         foreach ($fontPaths as $path) {
             if (file_exists($path)) {
                 return $path;
             }
         }
-        
+
         // Return first path as fallback (will be handled in drawCenteredText)
         return $fontPaths[0];
     }
