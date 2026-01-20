@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    'viva' => [
+        'merchant_id' => env('VIVA_MERCHANT_ID'),
+        'api_key' => env('VIVA_API_KEY'),
+        'environment' => env('VIVA_ENVIRONMENT', 'demo'), // 'demo' or 'production'
+        'registration_amount' => env('VIVA_REGISTRATION_AMOUNT', 100.00),
+
+        // API URLs Configuration
+        'urls' => [
+            'demo' => [
+                'orders' => 'https://demo-api.vivapayments.com/checkout/v2/orders',
+                'transactions' => 'https://demo-api.vivapayments.com/api/transactions',
+                'orders_detail' => 'https://demo-api.vivapayments.com/api/orders',
+                'checkout' => 'https://demo.vivapayments.com/web/checkout',
+            ],
+            'production' => [
+                'orders' => 'https://api.vivapayments.com/checkout/v2/orders',
+                'transactions' => 'https://api.vivapayments.com/api/transactions',
+                'orders_detail' => 'https://api.vivapayments.com/api/orders',
+                'checkout' => 'https://www.vivapayments.com/web/checkout',
+            ],
+        ],
+    ],
+
 ];

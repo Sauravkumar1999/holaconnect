@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\User;
+use App\Services\VivaPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +13,13 @@ use Illuminate\Support\Facades\Storage;
 
 class RegisterController extends Controller
 {
+    protected $vivaPayment;
+
+    public function __construct(VivaPaymentService $vivaPayment)
+    {
+        $this->vivaPayment = $vivaPayment;
+    }
+
     /**
      * Show the registration form.
      */
@@ -36,6 +45,7 @@ class RegisterController extends Controller
             'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'payment_type' => 'required|in:pre_payment,new_payment',
             'document_payment_receipt' => 'required_if:payment_type,pre_payment|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'payment_order_code' => 'required_if:payment_type,new_payment|nullable|string',
             'terms_agreed' => 'required|accepted',
             'share_certificate_agreed' => 'required|accepted',
         ]);
@@ -57,6 +67,53 @@ class RegisterController extends Controller
             $documentIdentityPath = 'documents/identity/' . $fileName;
         }
 
+        // If new_payment is selected, verify payment first
+        if ($validated['payment_type'] === 'new_payment') {
+            $paymentOrderCode = $request->input('payment_order_code');
+            
+            if (!$paymentOrderCode) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Payment order code is required.');
+            }
+
+            // Verify payment was successful
+            $payment = Payment::where('order_code', $paymentOrderCode)->first();
+            
+            if (!$payment || $payment->status !== 'completed') {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Payment verification failed. Please complete the payment first.');
+            }
+
+            // Create the user
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'],
+                'psp_number' => $validated['psp_number'] ?? null,
+                'taxi_driver_id' => $validated['taxi_driver_id'] ?? null,
+                'user_type' => 1, // User type
+                'document_dashboard_path' => $documentDashboardPath,
+                'document_identity_path' => $documentIdentityPath,
+                'document_payment_receipt_path' => null,
+                'payment_type' => 'new_payment',
+                'terms_agreed' => true,
+                'share_certificate_agreed' => true,
+            ]);
+
+            // Link payment to user
+            $payment->update(['user_id' => $user->id]);
+
+            // Log the user in
+            Auth::login($user);
+
+            // Redirect with success message
+            return redirect()->route('dashboard')->with('success', 'Payment successful! Successfully Registered! Welcome to Hola Connect.');
+        }
+
+        // Handle pre_payment flow (existing logic)
         $documentPaymentReceiptPath = null;
         if ($request->payment_type === 'pre_payment' && $request->hasFile('document_payment_receipt')) {
             $file = $request->file('document_payment_receipt');
@@ -88,4 +145,54 @@ class RegisterController extends Controller
         // Redirect with success message
         return redirect()->route('dashboard')->with('success', 'Successfully Registered! Welcome to Hola Connect.');
     }
+
+    /**
+     * Create payment order via AJAX
+     */
+    public function createPaymentOrder(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'email' => 'required|email',
+            'name' => 'required|string',
+            'phone' => 'required|string',
+        ]);
+
+        $paymentData = [
+            'amount' => $request->input('amount'),
+            'email' => $request->input('email'),
+            'fullName' => $request->input('name'),
+            'phone' => $request->input('phone'),
+            'customerTrns' => 'Registration Payment - ' . $request->input('name'),
+            'merchantTrns' => 'Registration for ' . $request->input('email'),
+            // Note: successUrl and failUrl are configured in Viva dashboard Payment Source
+        ];
+
+        $paymentOrder = $this->vivaPayment->createPaymentOrder($paymentData);
+
+        if (!$paymentOrder || !isset($paymentOrder['orderCode'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payment order. Please check your Viva Payment credentials and try again.'
+            ], 500);
+        }
+
+        // Create payment record
+        $payment = Payment::create([
+            'order_code' => $paymentOrder['orderCode'],
+            'transaction_id' => $paymentOrder['transactionId'] ?? null,
+            'amount' => $request->input('amount'),
+            'currency' => 'EUR',
+            'status' => 'pending',
+            'customer_trns' => $paymentData['customerTrns'],
+            'merchant_trns' => $paymentData['merchantTrns'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'orderCode' => $paymentOrder['orderCode'],
+            'checkoutUrl' => $paymentOrder['checkoutUrl'],
+        ]);
+    }
+
 }

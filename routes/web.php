@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PaymentController;
 
 // Redirect base URL to registration
 Route::get('/', function () {
@@ -14,10 +15,16 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+    Route::post('/payment/create-order', [RegisterController::class, 'createPaymentOrder'])->name('payment.create-order');
+    Route::get('/payment/check-status', [PaymentController::class, 'checkStatus'])->name('payment.check-status');
 
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
 });
+
+// Payment callback routes (no auth required, CSRF excluded)
+Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/failure', [PaymentController::class, 'failure'])->name('payment.failure');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {

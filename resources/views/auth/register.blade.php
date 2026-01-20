@@ -31,6 +31,7 @@
 
                 <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="registrationForm">
                     @csrf
+                    <input type="hidden" name="payment_order_code" id="payment_order_code" value="">
 
                     <!-- Full Name -->
                     <div class="form-group">
@@ -236,9 +237,70 @@
             </div>
         </div>
     </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">
+                        <i class="fas fa-credit-card"></i> Complete Payment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closePaymentModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="paymentAmountSection">
+                        <div class="form-group mb-3">
+                            <label for="paymentAmount" class="form-label">
+                                Payment Amount (EUR) <span class="required-mark">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="paymentAmount" 
+                                step="0.01" min="0.01" value="{{ config('services.viva.registration_amount') }}" 
+                                placeholder="Enter amount">
+                            <small class="text-muted">Minimum amount: €0.30</small>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn-primary" id="proceedToPaymentBtn">
+                                <i class="fas fa-lock"></i> Proceed to Payment
+                            </button>
+                        </div>
+                    </div>
+                    <div id="paymentIframeSection" style="display: none;">
+                        <div class="text-center mb-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Redirecting to secure payment gateway...</p>
+                        </div>
+                        <iframe id="paymentIframe" src="" style="width: 100%; height: 600px; border: none; display: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-content {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+        }
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+        #paymentIframe {
+            border-radius: 8px;
+        }
+    </style>
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const prePaymentRadio = document.getElementById('pre_payment');
@@ -247,6 +309,10 @@
             const paymentReceiptInput = document.getElementById('document_payment_receipt');
             const prePaymentCard = document.getElementById('prePaymentCard');
             const newPaymentCard = document.getElementById('newPaymentCard');
+            const registrationForm = document.getElementById('registrationForm');
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            const paymentOrderCodeInput = document.getElementById('payment_order_code');
+            let currentOrderCode = null;
 
             function togglePaymentReceipt() {
                 if (prePaymentRadio.checked) {
@@ -279,6 +345,155 @@
             newPaymentCard.addEventListener('click', function() {
                 newPaymentRadio.checked = true;
                 togglePaymentReceipt();
+            });
+
+            // Intercept form submission for new payment
+            registrationForm.addEventListener('submit', function(e) {
+                if (newPaymentRadio.checked) {
+                    e.preventDefault();
+                    
+                    // Validate form first
+                    if (!registrationForm.checkValidity()) {
+                        registrationForm.reportValidity();
+                        return;
+                    }
+
+                    // Show payment modal
+                    paymentModal.show();
+                }
+            });
+
+            // Handle proceed to payment button
+            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
+                const amount = parseFloat(document.getElementById('paymentAmount').value);
+                
+                if (!amount || amount < 0.30) {
+                    alert('Please enter a valid amount (minimum €0.30)');
+                    return;
+                }
+
+                // Get form data
+                const formData = new FormData(registrationForm);
+                const email = formData.get('email');
+                const name = formData.get('name');
+                const phone = formData.get('phone');
+
+                // Show loading
+                document.getElementById('paymentAmountSection').style.display = 'none';
+                document.getElementById('paymentIframeSection').style.display = 'block';
+
+                // Create payment order
+                fetch('{{ route("payment.create-order") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        email: email,
+                        name: name,
+                        phone: phone
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentOrderCode = data.orderCode;
+                        paymentOrderCodeInput.value = data.orderCode;
+                        
+                        // Load payment iframe
+                        const iframe = document.getElementById('paymentIframe');
+                        iframe.src = data.checkoutUrl;
+                        iframe.style.display = 'block';
+                        
+                        // Listen for payment completion via postMessage or polling
+                        startPaymentStatusCheck(data.orderCode);
+                    } else {
+                        alert('Failed to create payment order: ' + (data.message || 'Unknown error'));
+                        document.getElementById('paymentAmountSection').style.display = 'block';
+                        document.getElementById('paymentIframeSection').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    document.getElementById('paymentAmountSection').style.display = 'block';
+                    document.getElementById('paymentIframeSection').style.display = 'none';
+                });
+            });
+
+            // Check payment status periodically
+            function startPaymentStatusCheck(orderCode) {
+                const checkInterval = setInterval(function() {
+                    fetch('{{ route("payment.check-status") }}?orderCode=' + orderCode, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'completed') {
+                            clearInterval(checkInterval);
+                            // Close modal
+                            paymentModal.hide();
+                            // Submit the form
+                            registrationForm.submit();
+                        } else if (data.status === 'failed') {
+                            clearInterval(checkInterval);
+                            alert('Payment failed. Please try again.');
+                            paymentModal.hide();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking payment status:', error);
+                    });
+                }, 3000); // Check every 3 seconds
+
+                // Stop checking after 10 minutes
+                setTimeout(function() {
+                    clearInterval(checkInterval);
+                }, 600000);
+            }
+
+            // Listen for postMessage from iframe
+            window.addEventListener('message', function(event) {
+                // Accept messages from our own domain (success page) or Viva
+                if (event.data && (event.data.type === 'payment_success' || event.data.type === 'payment_completed')) {
+                    if (currentOrderCode) {
+                        // Verify payment status one more time
+                        fetch('{{ route("payment.check-status") }}?orderCode=' + currentOrderCode, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'completed') {
+                                paymentOrderCodeInput.value = currentOrderCode;
+                                paymentModal.hide();
+                                registrationForm.submit();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error verifying payment:', error);
+                        });
+                    }
+                } else if (event.data && event.data.type === 'payment_failed') {
+                    alert('Payment failed. Please try again.');
+                    paymentModal.hide();
+                }
+            });
+
+            // Reset modal when closed
+            document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('paymentAmountSection').style.display = 'block';
+                document.getElementById('paymentIframeSection').style.display = 'none';
+                document.getElementById('paymentIframe').src = '';
+                document.getElementById('paymentIframe').style.display = 'none';
+                currentOrderCode = null;
             });
         });
     </script>
