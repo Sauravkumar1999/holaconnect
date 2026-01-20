@@ -25,5 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     // Admin routes
-    Route::get('/admin/registrations', [AdminController::class, 'registrations'])->name('admin.registrations');
+    Route::get('/registrations', [AdminController::class, 'registrations'])->name('registrations');
+    Route::get('/registrations/{user}', [AdminController::class, 'registrationDetails'])->name('registration.details');
+
 });

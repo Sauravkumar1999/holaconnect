@@ -193,7 +193,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h3><i class="fas fa-taxi"></i> Hola Taxi</h3>
+                <h3><i class="fas fa-taxi"></i> Hola Connect</h3>
             </div>
             <ul class="sidebar-menu">
                 <li>
@@ -204,7 +204,7 @@
                 </li>
                 @if (Auth::user()->user_type == 0)
                     <li>
-                        <a href="{{ route('admin.registrations') }}">
+                        <a href="{{ route('registrations') }}">
                             <i class="fas fa-users"></i>
                             <span>All Registrations</span>
                         </a>

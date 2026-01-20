@@ -12,16 +12,18 @@ use Yajra\DataTables\Html\Column;
 
 class AdminController extends Controller
 {
+
+    public function __construct()
+    {
+        if (Auth::user()->user_type !== 0) {
+            abort(403, 'Unauthorized access.');
+        }
+    }
     /**
      * Show all registrations.
      */
     public function registrations(Request $request, Builder $htmlBuilder)
     {
-        // Check if user is admin
-        if (Auth::user()->user_type !== 0) {
-            abort(403, 'Unauthorized access.');
-        }
-
         if ($request->ajax()) {
             $query = User::where('user_type', 1);
 
@@ -41,7 +43,7 @@ class AdminController extends Controller
 
             return DataTables::eloquent($query)
                 ->addColumn('action', function ($user) {
-                    return '<a href="' . route('dashboard') . '?user_id=' . $user->id . '" class="btn btn-sm btn-primary">
+                    return '<a href="' . route('registration.details', $user) . '" class="btn btn-sm btn-primary">
                         <i class="fas fa-eye"></i> View
                     </a>';
                 })
@@ -129,5 +131,10 @@ class AdminController extends Controller
             'title' => 'All Registrations',
             'dataTable' => $html
         ]);
+    }
+
+    public function registrationDetails(User $user)
+    {
+        return view('admin.registration-details', compact('user'));
     }
 }
