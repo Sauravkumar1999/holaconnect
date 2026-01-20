@@ -121,8 +121,8 @@
                             Upload Taxi Driver Dashboard Number Document <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_dashboard') is-invalid @enderror"
-                            id="document_dashboard" name="document_dashboard" required accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max: 2MB)</small>
+                            id="document_dashboard" name="document_dashboard" required accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_dashboard')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -134,8 +134,8 @@
                             Upload Proof of Identity Document <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_identity') is-invalid @enderror"
-                            id="document_identity" name="document_identity" required accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max: 2MB)</small>
+                            id="document_identity" name="document_identity" required accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_identity')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -173,8 +173,8 @@
                             Upload Payment Receipt <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_payment_receipt') is-invalid @enderror"
-                            id="document_payment_receipt" name="document_payment_receipt" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max: 2MB)</small>
+                            id="document_payment_receipt" name="document_payment_receipt" accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_payment_receipt')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror

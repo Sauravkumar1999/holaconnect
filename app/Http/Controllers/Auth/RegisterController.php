@@ -32,10 +32,10 @@ class RegisterController extends Controller
             'phone' => 'required|string|max:20',
             'psp_number' => 'nullable|string|max:255',
             'taxi_driver_id' => 'nullable|string|max:255',
-            'document_dashboard' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'document_identity' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'payment_type' => 'required|in:pre_payment,new_payment',
-            'document_payment_receipt' => 'required_if:payment_type,pre_payment|nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'document_payment_receipt' => 'required_if:payment_type,pre_payment|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'terms_agreed' => 'required|accepted',
             'share_certificate_agreed' => 'required|accepted',
         ]);
