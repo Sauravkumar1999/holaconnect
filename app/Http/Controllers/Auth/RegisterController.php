@@ -45,56 +45,23 @@ class RegisterController extends Controller
             'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'payment_type' => 'required|in:existing_user,partial_user,new_user',
             'document_payment_receipt' => 'required_if:payment_type,existing_user,partial_user|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'payment_order_code' => 'required_if:payment_type,new_user,partial_user|nullable|string',
             'terms_agreed' => 'required|accepted',
             'share_certificate_agreed' => 'required|accepted',
         ]);
 
+        if ($validated['payment_type'] === 'existing_user') {
+            return $this->processExistingUserRegistration($request, $validated);
+        } else {
+            return $this->processPaymentRegistration($request, $validated);
+        }
+    }
+
+    private function processExistingUserRegistration(Request $request, array $validated)
+    {
         // Handle file uploads - Store directly in public folder
-        $documentDashboardPath = null;
-        if ($request->hasFile('document_dashboard')) {
-            $file = $request->file('document_dashboard');
-            $fileName = time() . '_dashboard_' . $file->getClientOriginalName();
-            $file->move(public_path('documents/dashboard'), $fileName);
-            $documentDashboardPath = 'documents/dashboard/' . $fileName;
-        }
-
-        $documentIdentityPath = null;
-        if ($request->hasFile('document_identity')) {
-            $file = $request->file('document_identity');
-            $fileName = time() . '_identity_' . $file->getClientOriginalName();
-            $file->move(public_path('documents/identity'), $fileName);
-            $documentIdentityPath = 'documents/identity/' . $fileName;
-        }
-
-        // Verify payment if applicable (new_user or partial_user)
-        if (in_array($validated['payment_type'], ['new_user', 'partial_user'])) {
-            $paymentOrderCode = $request->input('payment_order_code');
-
-            if (!$paymentOrderCode) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Payment order code is required.');
-            }
-
-            // Verify payment was successful
-            $payment = Payment::where('order_code', $paymentOrderCode)->first();
-
-            if (!$payment || $payment->status !== 'completed') {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Payment verification failed. Please complete the payment first.');
-            }
-        }
-
-        // Handle document receipt upload (partial_user or existing_user)
-        $documentPaymentReceiptPath = null;
-        if (in_array($validated['payment_type'], ['partial_user', 'existing_user']) && $request->hasFile('document_payment_receipt')) {
-            $file = $request->file('document_payment_receipt');
-            $fileName = time() . '_receipt_' . $file->getClientOriginalName();
-            $file->move(public_path('documents/payment_receipts'), $fileName);
-            $documentPaymentReceiptPath = 'documents/payment_receipts/' . $fileName;
-        }
+        $documentDashboardPath = $this->uploadFile($request, 'document_dashboard', 'documents/dashboard', 'dashboard');
+        $documentIdentityPath = $this->uploadFile($request, 'document_identity', 'documents/identity', 'identity');
+        $documentPaymentReceiptPath = $this->uploadFile($request, 'document_payment_receipt', 'documents/payment_receipts', 'receipt');
 
         // Create the user
         $user = User::create([
@@ -113,11 +80,6 @@ class RegisterController extends Controller
             'share_certificate_agreed' => true,
         ]);
 
-        // Link payment to user if applicable
-        if (isset($payment)) {
-            $payment->update(['user_id' => $user->id]);
-        }
-
         // Log the user in
         Auth::login($user);
 
@@ -125,53 +87,94 @@ class RegisterController extends Controller
         return redirect()->route('dashboard')->with('success', 'Successfully Registered! Welcome to Hola Connect.');
     }
 
-    /**
-     * Create payment order via AJAX
-     */
-    public function createPaymentOrder(Request $request)
+    private function processPaymentRegistration(Request $request, array $validated)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'email' => 'required|email',
-            'name' => 'required|string',
-            'phone' => 'required|string',
-        ]);
+        // Temp Storage Directory
+        $tempDir = 'documents/temp';
+        if (!file_exists(public_path($tempDir))) {
+            mkdir(public_path($tempDir), 0755, true);
+        }
 
+        // Upload files to temporary location
+        $documentDashboardPath = $this->uploadFile($request, 'document_dashboard', $tempDir, 'dashboard');
+        $documentIdentityPath = $this->uploadFile($request, 'document_identity', $tempDir, 'identity');
+
+        $documentPaymentReceiptPath = null;
+        if ($validated['payment_type'] === 'partial_user') {
+            $documentPaymentReceiptPath = $this->uploadFile($request, 'document_payment_receipt', $tempDir, 'receipt');
+        }
+
+        // Calculate Amount
+        $baseAmount = (float) \App\Models\Setting::get('registration_payment_amount', 50.00);
+        $amount = $baseAmount;
+
+        if ($validated['payment_type'] === 'partial_user') {
+            $amount = $baseAmount - 5;
+        }
+
+        if ($amount < 0.30)
+            $amount = 0.30; // Minimum Viva amount
+
+        // Create Order
         $paymentData = [
-            'amount' => $request->input('amount'),
-            'email' => $request->input('email'),
-            'fullName' => $request->input('name'),
-            'phone' => $request->input('phone'),
-            'customerTrns' => 'Registration Payment - ' . $request->input('name'),
-            'merchantTrns' => 'Registration for ' . $request->input('email'),
-            // Note: successUrl and failUrl are configured in Viva dashboard Payment Source
+            'amount' => $amount,
+            'email' => $validated['email'],
+            'fullName' => $validated['name'],
+            'phone' => $validated['phone'],
+            'customerTrns' => 'Registration Payment - ' . $validated['name'],
+            'merchantTrns' => 'Registration for ' . $validated['email'],
         ];
 
         $paymentOrder = $this->vivaPayment->createPaymentOrder($paymentData);
 
         if (!$paymentOrder || !isset($paymentOrder['orderCode'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create payment order. Please check your Viva Payment credentials and try again.'
-            ], 500);
+            return redirect()->back()->withInput()->with('error', 'Failed to initiate payment. Please check your details and try again.');
         }
 
-        // Create payment record
+        // Create Payment Record
         $payment = Payment::create([
             'order_code' => $paymentOrder['orderCode'],
             'transaction_id' => $paymentOrder['transactionId'] ?? null,
-            'amount' => $request->input('amount'),
+            'amount' => $amount,
             'currency' => 'EUR',
             'status' => 'pending',
             'customer_trns' => $paymentData['customerTrns'],
             'merchant_trns' => $paymentData['merchantTrns'],
         ]);
 
-        return response()->json([
-            'success' => true,
-            'orderCode' => $paymentOrder['orderCode'],
-            'checkoutUrl' => $paymentOrder['checkoutUrl'],
+        // Store Session Data (including temp file paths and NON-hashed password)
+        // Store Session Data (including temp file paths and NON-hashed password)
+        // We must exclude the file objects from $validated as they cannot be serialized
+        $sessionData = $validated;
+        unset($sessionData['document_dashboard']);
+        unset($sessionData['document_identity']);
+        unset($sessionData['document_payment_receipt']);
+
+        session([
+            'pending_registration' => array_merge($sessionData, [
+                'document_dashboard_path' => $documentDashboardPath,
+                'document_identity_path' => $documentIdentityPath,
+                'document_payment_receipt_path' => $documentPaymentReceiptPath,
+                'password' => $validated['password'],
+            ])
         ]);
+
+        // Redirect to Viva Checkout
+        return redirect($paymentOrder['checkoutUrl']);
     }
 
+    private function uploadFile($request, $key, $folder, $prefix)
+    {
+        if ($request->hasFile($key)) {
+            $file = $request->file($key);
+            $fileName = time() . '_' . $prefix . '_' . $file->getClientOriginalName();
+            // Ensure folder exists
+            if (!file_exists(public_path($folder))) {
+                mkdir(public_path($folder), 0755, true);
+            }
+            $file->move(public_path($folder), $fileName);
+            return $folder . '/' . $fileName;
+        }
+        return null;
+    }
 }

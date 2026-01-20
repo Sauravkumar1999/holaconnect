@@ -31,7 +31,7 @@
 
                 <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="registrationForm">
                     @csrf
-                    <input type="hidden" name="payment_order_code" id="payment_order_code" value="">
+
 
                     <!-- Full Name -->
                     <div class="form-group">
@@ -245,63 +245,6 @@
         </div>
     </div>
 
-    <!-- Payment Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">
-                        <i class="fas fa-credit-card"></i> Complete Payment
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closePaymentModal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="paymentAmountSection">
-                        <div class="form-group mb-3">
-                            <label for="paymentAmount" class="form-label">
-                                Payment Amount (EUR) <span class="required-mark">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="paymentAmount" 
-                                value="{{ \App\Models\Setting::get('registration_payment_amount') }}" 
-                                readonly style="background-color: #f8f9fa; cursor: not-allowed;">
-                        </div>
-                        <div class="text-center">
-                            <button type="button" class="btn-primary" id="proceedToPaymentBtn">
-                                <i class="fas fa-lock"></i> Proceed to Payment
-                            </button>
-                        </div>
-                    </div>
-                    <div id="paymentIframeSection" style="display: none;">
-                        <div class="text-center mb-3">
-                            <div class="spinner-border text-primary" role="status">
-                            </div>
-                            <p class="mt-2">Redirecting to secure payment gateway...</p>
-                        </div>
-                        <iframe id="paymentIframe" src="" style="width: 100%; height: 600px; border: none; display: none;"></iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .modal-content {
-            border-radius: 10px;
-            border: none;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom: none;
-        }
-        .modal-header .btn-close {
-            filter: invert(1);
-        }
-        #paymentIframe {
-            border-radius: 8px;
-        }
-    </style>
 @endsection
 
 @push('scripts')
@@ -314,242 +257,62 @@
 
             const paymentReceiptField = document.getElementById('paymentReceiptField');
             const paymentReceiptInput = document.getElementById('document_payment_receipt');
-            
+
             const existingUserCard = document.getElementById('existingUserCard');
             const partialUserCard = document.getElementById('partialUserCard');
             const newUserCard = document.getElementById('newUserCard');
 
-            const registrationForm = document.getElementById('registrationForm');
-            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-            const paymentOrderCodeInput = document.getElementById('payment_order_code');
-            const paymentAmountInput = document.getElementById('paymentAmount');
-            const baseAmount = parseFloat("{{ \App\Models\Setting::get('registration_payment_amount') }}") || 0;
-            let currentOrderCode = null;
-
             function togglePaymentReceipt() {
                 // Reset active classes
-                existingUserCard.classList.remove('active');
-                partialUserCard.classList.remove('active');
-                newUserCard.classList.remove('active');
+                if(existingUserCard) existingUserCard.classList.remove('active');
+                if(partialUserCard) partialUserCard.classList.remove('active');
+                if(newUserCard) newUserCard.classList.remove('active');
 
-                if (existingUserRadio.checked) {
+                if (existingUserRadio && existingUserRadio.checked) {
                     // Existing User: Upload File + NO Payment
-                    paymentReceiptField.style.display = 'block';
-                    paymentReceiptInput.required = true;
-                    existingUserCard.classList.add('active');
-                } else if (partialUserRadio.checked) {
+                    if(paymentReceiptField) paymentReceiptField.style.display = 'block';
+                    if(paymentReceiptInput) paymentReceiptInput.required = true;
+                    if(existingUserCard) existingUserCard.classList.add('active');
+                } else if (partialUserRadio && partialUserRadio.checked) {
                     // Partial User: Upload File + Payment (Amount - 5)
-                    paymentReceiptField.style.display = 'block';
-                    paymentReceiptInput.required = true;
-                    partialUserCard.classList.add('active');
-                } else if (newUserRadio.checked) {
+                    if(paymentReceiptField) paymentReceiptField.style.display = 'block';
+                    if(paymentReceiptInput) paymentReceiptInput.required = true;
+                    if(partialUserCard) partialUserCard.classList.add('active');
+                } else if (newUserRadio && newUserRadio.checked) {
                     // New User: No Upload + Full Payment
-                    paymentReceiptField.style.display = 'none';
-                    paymentReceiptInput.required = false;
-                    paymentReceiptInput.value = '';
-                    newUserCard.classList.add('active');
+                    if(paymentReceiptField) paymentReceiptField.style.display = 'none';
+                    if(paymentReceiptInput) {
+                        paymentReceiptInput.required = false;
+                        paymentReceiptInput.value = '';
+                    }
+                    if(newUserCard) newUserCard.classList.add('active');
                 }
             }
 
             // Add event listeners
-            existingUserRadio.addEventListener('change', togglePaymentReceipt);
-            partialUserRadio.addEventListener('change', togglePaymentReceipt);
-            newUserRadio.addEventListener('change', togglePaymentReceipt);
+            if(existingUserRadio) existingUserRadio.addEventListener('change', togglePaymentReceipt);
+            if(partialUserRadio) partialUserRadio.addEventListener('change', togglePaymentReceipt);
+            if(newUserRadio) newUserRadio.addEventListener('change', togglePaymentReceipt);
 
             // Initialize on page load
             togglePaymentReceipt();
 
             // Make radio cards clickable
-            existingUserCard.addEventListener('click', function() {
-                existingUserRadio.checked = true;
-                togglePaymentReceipt();
-            });
-
-            partialUserCard.addEventListener('click', function() {
-                partialUserRadio.checked = true;
-                togglePaymentReceipt();
-            });
-
-            newUserCard.addEventListener('click', function() {
-                newUserRadio.checked = true;
-                togglePaymentReceipt();
-            });
-
-            // Intercept form submission
-            registrationForm.addEventListener('submit', function(e) {
-                // Case 1: Existing User - Submit Directly (No Payment)
-                if (existingUserRadio.checked) {
-                    return; // Allow default submit
-                }
-
-                // Case 2: Partial or New User payment needed
-                if (partialUserRadio.checked || newUserRadio.checked) {
-                    // Check if we already have a successful payment code
-                    if (paymentOrderCodeInput.value) {
-                         return; // Allow submit
-                    }
-
-                    // Prevent default submit to show payment modal
-                    e.preventDefault();
-                    
-                    // Validate form first using browser built-in validation
-                    if (!registrationForm.checkValidity()) {
-                        registrationForm.reportValidity();
-                        return;
-                    }
-
-                    // Set Payment Amount
-                    if (newUserRadio.checked) {
-                         paymentAmountInput.value = baseAmount.toFixed(2);
-                    } else if (partialUserRadio.checked) {
-                         let discountedAmount = baseAmount - 5;
-                         if (discountedAmount < 0.30) discountedAmount = 0.30; 
-                         paymentAmountInput.value = discountedAmount.toFixed(2);
-                    }
-
-                    // Show payment modal
-                    paymentModal.show();
-                }
-            });
-
-            // Handle proceed to payment button
-            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
-                const amount = parseFloat(document.getElementById('paymentAmount').value);
-                
-                if (!amount || amount < 0.30) {
-                    alert('Please enter a valid amount (minimum €0.30)');
-                    return;
-                }
-
-                // Get form data
-                const formData = new FormData(registrationForm);
-                const email = formData.get('email');
-                const name = formData.get('name');
-                const phone = formData.get('phone');
-
-                // Show loading
-                document.getElementById('paymentAmountSection').style.display = 'none';
-                document.getElementById('paymentIframeSection').style.display = 'block';
-
-                // Create payment order
-                fetch('{{ route("payment.create-order") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        amount: amount,
-                        email: email,
-                        name: name,
-                        phone: phone
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        currentOrderCode = data.orderCode;
-                        paymentOrderCodeInput.value = data.orderCode;
-                        
-                        // Load payment iframe
-                        const iframe = document.getElementById('paymentIframe');
-                        iframe.src = data.checkoutUrl;
-                        iframe.style.display = 'block';
-                        
-                        // Listen for payment completion
-                        startPaymentStatusCheck(data.orderCode);
-                    } else {
-                        alert('Failed to create payment order: ' + (data.message || 'Unknown error'));
-                        document.getElementById('paymentAmountSection').style.display = 'block';
-                        document.getElementById('paymentIframeSection').style.display = 'none';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
-                    document.getElementById('paymentAmountSection').style.display = 'block';
-                    document.getElementById('paymentIframeSection').style.display = 'none';
-                });
-            });
-
-            // Check payment status periodically
-            function startPaymentStatusCheck(orderCode) {
-                const checkInterval = setInterval(function() {
-                    fetch('{{ route("payment.check-status") }}?orderCode=' + orderCode, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'completed') {
-                            clearInterval(checkInterval);
-                            finishRegistration(orderCode);
-                        } else if (data.status === 'failed') {
-                            clearInterval(checkInterval);
-                            alert('Payment failed. Please try again.');
-                            paymentModal.hide();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error checking payment status:', error);
-                    });
-                }, 3000); // Check every 3 seconds
-
-                // Stop checking after 10 minutes
-                setTimeout(function() {
-                    clearInterval(checkInterval);
-                }, 600000);
-            }
-
-            // Listen for postMessage from iframe
-            window.addEventListener('message', function(event) {
-                if (event.data && (event.data.type === 'payment_success' || event.data.type === 'payment_completed')) {
-                    if (currentOrderCode) {
-                        verifyAndFinish(currentOrderCode);
-                    }
-                } else if (event.data && event.data.type === 'payment_failed') {
-                    alert('Payment failed. Please try again.');
-                    paymentModal.hide();
-                }
-            });
-
-            function verifyAndFinish(orderCode) {
-                fetch('{{ route("payment.check-status") }}?orderCode=' + orderCode, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'completed') {
-                        finishRegistration(orderCode);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error verifying payment:', error);
+            if(existingUserCard) {
+                existingUserCard.addEventListener('click', function() { 
+                    if(existingUserRadio) { existingUserRadio.checked = true; togglePaymentReceipt(); }
                 });
             }
-
-            function finishRegistration(orderCode) {
-                paymentOrderCodeInput.value = orderCode;
-                paymentModal.hide();
-                // Ensure submit happens after modal hides
-                setTimeout(() => {
-                    registrationForm.submit();
-                }, 500);
+            if(partialUserCard) {
+                partialUserCard.addEventListener('click', function() { 
+                    if(partialUserRadio) { partialUserRadio.checked = true; togglePaymentReceipt(); }
+                });
             }
-
-            // Reset modal when closed
-            document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function() {
-                document.getElementById('paymentAmountSection').style.display = 'block';
-                document.getElementById('paymentIframeSection').style.display = 'none';
-                document.getElementById('paymentIframe').src = '';
-                document.getElementById('paymentIframe').style.display = 'none';
-                currentOrderCode = null;
-            });
+            if(newUserCard) {
+                newUserCard.addEventListener('click', function() { 
+                    if(newUserRadio) { newUserRadio.checked = true; togglePaymentReceipt(); }
+                });
+            }
         });
     </script>
 @endpush

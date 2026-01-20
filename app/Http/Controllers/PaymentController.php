@@ -28,10 +28,10 @@ class PaymentController extends Controller
      */
     public function success(Request $request)
     {
-        // Viva Payment returns order code as 's' parameter
-        $orderCode = $request->query('s') ?? $request->query('OrderCode');
+        // Viva Payment returns order code/transaction id as 's', 't', or 'orderCode' depending on version/config
+        $orderCode = $request->input('s') ?? $request->input('t') ?? $request->input('orderCode') ?? $request->input('order_id');
 
-        Log::info('Payment success callback received', ['orderCode' => $orderCode]);
+        Log::info('Payment success callback received', ['orderCode' => $orderCode, 'params' => $request->all()]);
 
         if (!$orderCode) {
             // Check if this is an iframe request
@@ -41,6 +41,7 @@ class PaymentController extends Controller
             return redirect()->route('register')
                 ->with('error', 'Invalid payment response. Please try again.');
         }
+
 
         // Find the payment record
         $payment = Payment::where('order_code', $orderCode)->first();
@@ -186,9 +187,9 @@ class PaymentController extends Controller
      */
     public function failure(Request $request)
     {
-        $orderCode = $request->query('s');
+        $orderCode = $request->input('s') ?? $request->input('t') ?? $request->input('orderCode') ?? $request->input('order_id');
 
-        Log::info('Payment failure callback received', ['orderCode' => $orderCode]);
+        Log::info('Payment failure callback received', ['orderCode' => $orderCode, 'params' => $request->all()]);
 
         if ($orderCode) {
             $payment = Payment::where('order_code', $orderCode)->first();
@@ -212,16 +213,10 @@ class PaymentController extends Controller
     private function completeRegistration(array $registrationData, Payment $payment)
     {
         try {
-            // Handle file uploads - Store directly in public folder
-            $documentDashboardPath = null;
-            if (isset($registrationData['document_dashboard_path'])) {
-                $documentDashboardPath = $registrationData['document_dashboard_path'];
-            }
-
-            $documentIdentityPath = null;
-            if (isset($registrationData['document_identity_path'])) {
-                $documentIdentityPath = $registrationData['document_identity_path'];
-            }
+            // Move files from temp to final
+            $documentDashboardPath = $this->moveTempFile($registrationData['document_dashboard_path'] ?? null, 'documents/dashboard');
+            $documentIdentityPath = $this->moveTempFile($registrationData['document_identity_path'] ?? null, 'documents/identity');
+            $documentPaymentReceiptPath = $this->moveTempFile($registrationData['document_payment_receipt_path'] ?? null, 'documents/payment_receipts');
 
             // Create the user
             $user = User::create([
@@ -234,8 +229,8 @@ class PaymentController extends Controller
                 'user_type' => 1, // User type
                 'document_dashboard_path' => $documentDashboardPath,
                 'document_identity_path' => $documentIdentityPath,
-                'document_payment_receipt_path' => null, // No receipt for new payment
-                'payment_type' => 'new_payment',
+                'document_payment_receipt_path' => $documentPaymentReceiptPath,
+                'payment_type' => $registrationData['payment_type'],
                 'terms_agreed' => true,
                 'share_certificate_agreed' => true,
             ]);
@@ -261,5 +256,21 @@ class PaymentController extends Controller
             return redirect()->route('register')
                 ->with('error', 'Registration failed. Please contact support with your payment reference: ' . $payment->order_code);
         }
+    }
+
+    private function moveTempFile($tempPath, $targetFolder)
+    {
+        if (!$tempPath || !file_exists(public_path($tempPath)))
+            return null;
+
+        $fileName = basename($tempPath);
+        $targetPath = $targetFolder . '/' . $fileName;
+
+        if (!file_exists(public_path($targetFolder))) {
+            mkdir(public_path($targetFolder), 0755, true);
+        }
+
+        rename(public_path($tempPath), public_path($targetPath));
+        return $targetPath;
     }
 }
