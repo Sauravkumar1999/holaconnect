@@ -41,19 +41,20 @@ return [
         'environment' => env('VIVA_ENVIRONMENT', 'demo'), // 'demo' or 'production'
         'registration_amount' => env('VIVA_REGISTRATION_AMOUNT', 100.00),
 
-        // API URLs Configuration
+        // API URLs Configuratio
+
         'urls' => [
             'demo' => [
-                'orders' => 'https://demo-api.vivapayments.com/checkout/v2/orders',
-                'transactions' => 'https://demo-api.vivapayments.com/api/transactions',
-                'orders_detail' => 'https://demo-api.vivapayments.com/api/orders',
-                'checkout' => 'https://demo.vivapayments.com/web/checkout',
+                'orders' => 'https://demo.vivapayments.com/api/orders',
+                'transactions' => 'https://demo.vivapayments.com/api/transactions',
+                'orders_detail' => 'https://demo.vivapayments.com/api/orders',
+                'checkout' => 'https://demo.vivapayments.com/api/checkout',
             ],
             'production' => [
-                'orders' => 'https://api.vivapayments.com/checkout/v2/orders',
-                'transactions' => 'https://api.vivapayments.com/api/transactions',
+                'orders' => 'https://www.vivapayments.com/api/orders',
+                'transactions' => 'https://www.vivapayments.com/api/transactions',
                 'orders_detail' => 'https://api.vivapayments.com/api/orders',
-                'checkout' => 'https://www.vivapayments.com/web/checkout',
+                'checkout' => 'https://www.vivapayments.com/api/orders',
             ],
         ],
     ],

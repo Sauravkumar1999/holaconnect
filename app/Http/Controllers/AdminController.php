@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CertificateGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
@@ -42,10 +43,50 @@ class AdminController extends Controller
             }
 
             return DataTables::eloquent($query)
+                ->addColumn('application_status', function ($user) {
+                    // Treat null as pending
+                    $status = $user->application_status ?? 'pending';
+                    $statusBadges = [
+                        'pending' => '<span class="badge bg-warning text-dark">Pending</span>',
+                        'accepted' => '<span class="badge bg-success">Accepted</span>',
+                        'rejected' => '<span class="badge bg-danger">Rejected</span>',
+                    ];
+                    return $statusBadges[$status] ?? '<span class="badge bg-secondary">Unknown</span>';
+                })
                 ->addColumn('action', function ($user) {
-                    return '<a href="' . route('registration.details', $user) . '" class="btn btn-sm btn-primary">
-                        <i class="fas fa-eye"></i> View
-                    </a>';
+                    $dropdown = '
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="actionDropdown' . $user->id . '" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i> Actions
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="actionDropdown' . $user->id . '">
+                            <li>
+                                <a class="dropdown-item" href="' . route('registration.details', $user) . '">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </li>';
+
+                    // Treat null as pending
+                    if ($user->application_status == 'pending' || $user->application_status === null) {
+                        $dropdown .= '
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-success accept-application" href="javascript:void(0)" data-user-id="' . $user->id . '">
+                                    <i class="fas fa-check-circle"></i> Accept
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger reject-application" href="javascript:void(0)" data-user-id="' . $user->id . '">
+                                    <i class="fas fa-times-circle"></i> Reject
+                                </a>
+                            </li>';
+                    }
+
+                    $dropdown .= '
+                        </ul>
+                    </div>';
+
+                    return $dropdown;
                 })
                 ->addColumn('document_dashboard', function ($user) {
                     if ($user->document_dashboard_path) {
@@ -84,7 +125,7 @@ class AdminController extends Controller
                 ->editColumn('created_at', function ($user) {
                     return $user->created_at->format('d M Y, h:i A');
                 })
-                ->rawColumns(['action', 'document_dashboard', 'document_identity', 'document_receipt', 'payment_type'])
+                ->rawColumns(['action', 'document_dashboard', 'document_identity', 'document_receipt', 'payment_type', 'application_status'])
                 ->make(true);
         }
 
@@ -101,6 +142,7 @@ class AdminController extends Controller
                 Column::make('document_dashboard')->title('<i class="fas fa-file-alt"></i> Dashboard')->orderable(false)->searchable(false)->addClass('text-center'),
                 Column::make('document_identity')->title('<i class="fas fa-id-card"></i> Identity')->orderable(false)->searchable(false)->addClass('text-center'),
                 Column::make('document_receipt')->title('<i class="fas fa-receipt"></i> Receipt')->orderable(false)->searchable(false)->addClass('text-center'),
+                Column::make('application_status')->title('Status'),
                 Column::make('created_at')->title('Registered At'),
                 Column::computed('action')
                     ->exportable(false)
@@ -136,5 +178,84 @@ class AdminController extends Controller
     public function registrationDetails(User $user)
     {
         return view('admin.registration-details', compact('user'));
+    }
+
+    /**
+     * Accept a user's application and generate certificate.
+     */
+    public function acceptApplication(Request $request, User $user, CertificateGenerationService $certificateService)
+    {
+        // Treat null as pending - only allow accept if pending or null
+        if ($user->application_status !== 'pending' && $user->application_status !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This application has already been processed.'
+            ], 400);
+        }
+
+        try {
+            // Generate certificate number
+            $certificateNumber = $certificateService->generateCertificateNumber($user->id);
+
+            // Generate certificate date
+            $issuedDate = now()->format('d M Y');
+
+            // Generate certificate image
+            $certificatePath = $certificateService->generateCertificate(
+                $user->name,
+                $certificateNumber,
+                $issuedDate,
+                'Ireland',
+                250000
+            );
+
+            // Update user record
+            $user->update([
+                'application_status' => 'accepted',
+                'certificate_path' => $certificatePath,
+                'certificate_number' => $certificateNumber,
+                'certificate_issued_date' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Application accepted successfully and certificate generated.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to accept application: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject a user's application.
+     */
+    public function rejectApplication(Request $request, User $user)
+    {
+        // Treat null as pending - only allow reject if pending or null
+        if ($user->application_status !== 'pending' && $user->application_status !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This application has already been processed.'
+            ], 400);
+        }
+
+        try {
+            $user->update([
+                'application_status' => 'rejected',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Application rejected successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject application: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

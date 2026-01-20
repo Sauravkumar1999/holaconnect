@@ -18,6 +18,90 @@
         @endif
     </div>
     @if (Auth::user()->user_type == 1)
+        {{-- Application Status Card --}}
+        @php
+            $status = Auth::user()->application_status ?? 'pending';
+        @endphp
+        <div class="card" style="border-left: 4px solid 
+            @if($status === 'accepted') #10b981
+            @elseif($status === 'rejected') #ef4444
+            @else #f59e0b
+            @endif;">
+            <h2>
+                <i class="fas 
+                    @if($status === 'accepted') fa-check-circle
+                    @elseif($status === 'rejected') fa-times-circle
+                    @else fa-clock
+                    @endif"></i> 
+                Application Status
+            </h2>
+
+            @if($status === 'pending')
+                <div style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; border: 1px solid #fbbf24;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <i class="fas fa-hourglass-half" style="font-size: 2rem; color: #f59e0b;"></i>
+                        <div>
+                            <h3 style="margin: 0; color: #92400e; font-size: 1.25rem;">Application Pending Review</h3>
+                            <p style="margin: 0.5rem 0 0 0; color: #78350f;">Your application is currently under review by our team. We will notify you once a decision has been made.</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #fbbf24;">
+                        <small style="color: #78350f;">
+                            <i class="fas fa-info-circle"></i> 
+                            Submitted on {{ Auth::user()->created_at->format('d M Y, h:i A') }}
+                        </small>
+                    </div>
+                </div>
+            @elseif($status === 'accepted')
+                <div style="background: #d1fae5; padding: 1.5rem; border-radius: 8px; border: 1px solid #10b981;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+                        <div>
+                            <h3 style="margin: 0; color: #065f46; font-size: 1.25rem;">Application Accepted!</h3>
+                            <p style="margin: 0.5rem 0 0 0; color: #064e3b;">Congratulations! Your application has been approved.</p>
+                        </div>
+                    </div>
+                    
+                    @if(Auth::user()->certificate_path)
+                        <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                <div>
+                                    <h4 style="margin: 0 0 0.5rem 0; color: #065f46;">
+                                        <i class="fas fa-certificate"></i> Share Certificate
+                                    </h4>
+                                    <p style="margin: 0; font-size: 0.875rem; color: #059669;">
+                                        <strong>Certificate No:</strong> {{ Auth::user()->certificate_number }}<br>
+                                        <strong>Issued Date:</strong> {{ Auth::user()->certificate_issued_date ? Auth::user()->certificate_issued_date->format('d M Y') : 'N/A' }}
+                                    </p>
+                                </div>
+                                <a href="{{ asset(Auth::user()->certificate_path) }}" 
+                                   target="_blank" 
+                                   download
+                                   class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Certificate
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @elseif($status === 'rejected')
+                <div style="background: #fee2e2; padding: 1.5rem; border-radius: 8px; border: 1px solid #ef4444;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="fas fa-times-circle" style="font-size: 2rem; color: #ef4444;"></i>
+                        <div>
+                            <h3 style="margin: 0; color: #7f1d1d; font-size: 1.25rem;">Application Rejected</h3>
+                            <p style="margin: 0.5rem 0 0 0; color: #991b1b;">Unfortunately, your application has been rejected. Please contact support for more information or to reapply.</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ef4444;">
+                        <a href="mailto:support@holataxiireland.com" style="color: #991b1b; text-decoration: underline;">
+                            <i class="fas fa-envelope"></i> Contact Support
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+
         <div class="card">
             <h2><i class="fas fa-info-circle"></i> Your Registration Details</h2>
 

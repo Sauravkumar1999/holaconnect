@@ -26,22 +26,22 @@ class VivaPaymentService
     public function createPaymentOrder(array $data): ?array
     {
         try {
-            $payload = $this->buildOrderPayload($data);
-            $response = $this->makeRequest('POST', $this->urls['orders'], $payload);
+        $payload = $this->buildOrderPayload($data);
+        $response = $this->makeRequest('POST', $this->urls['orders'], $payload);
 
-            if ($response->successful()) {
-                $orderData = $response->json();
-                if ($orderCode = $orderData['orderCode'] ?? null) {
-                    return [
-                        'orderCode' => $orderCode,
-                        'checkoutUrl' => $this->urls['checkout'] . '?ref=' . $orderCode,
-                        'transactionId' => $orderData['transactionId'] ?? null,
-                    ];
-                }
+        if ($response->successful()) {
+            $orderData = $response->json();
+            if ($orderCode = $orderData['orderCode'] ?? null) {
+                return [
+                    'orderCode' => $orderCode,
+                    'checkoutUrl' => $this->urls['checkout'] . '?ref=' . $orderCode,
+                    'transactionId' => $orderData['transactionId'] ?? null,
+                ];
             }
+        }
 
-            $this->logError('createPaymentOrder', $response, $payload);
-            return null;
+        $this->logError('createPaymentOrder', $response, $payload);
+        return null;
         } catch (\Exception $e) {
             Log::error('Viva Payment: Exception creating payment order', ['message' => $e->getMessage()]);
             return null;
@@ -82,7 +82,7 @@ class VivaPaymentService
     private function buildOrderPayload(array $data): array
     {
         $payload = [
-            'amount' => (int)($data['amount'] * 100), // Convert to cents
+            'amount' => (int) ($data['amount'] * 100), // Convert to cents
             'customerTrns' => $data['customerTrns'] ?? 'Registration Payment',
             'email' => $data['email'] ?? '',
             'fullName' => $data['fullName'] ?? '',

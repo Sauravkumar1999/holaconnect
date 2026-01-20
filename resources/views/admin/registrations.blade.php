@@ -159,5 +159,120 @@
                     });
             }
         });
+
+        // Accept application handler
+        $(document).on('click', '.accept-application', function() {
+            let userId = $(this).data('user-id');
+            let url = '/registrations/' + userId + '/accept';
+
+            Swal.fire({
+                title: 'Accept Application?',
+                text: 'This will generate and issue a share certificate to the user.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Accept',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Generating certificate, please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: res.message,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+
+                            // Reload DataTable
+                            if (window.LaravelDataTables && window.LaravelDataTables['registrations-table']) {
+                                window.LaravelDataTables['registrations-table'].ajax.reload(null, false);
+                            }
+                        },
+                        error: function(xhr) {
+                            let message = 'Failed to accept application';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: message
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Reject application handler
+        $(document).on('click', '.reject-application', function() {
+            let userId = $(this).data('user-id');
+            let url = '/registrations/' + userId + '/reject';
+
+            Swal.fire({
+                title: 'Reject Application?',
+                text: 'Are you sure you want to reject this application? This action will notify the user.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Reject',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Rejected',
+                                text: res.message,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+
+                            // Reload DataTable
+                            if (window.LaravelDataTables && window.LaravelDataTables['registrations-table']) {
+                                window.LaravelDataTables['registrations-table'].ajax.reload(null, false);
+                            }
+                        },
+                        error: function(xhr) {
+                            let message = 'Failed to reject application';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: message
+                            });
+                        }
+                    });
+                }
+            });
+        });
     </script>
 @endpush

@@ -31,6 +31,10 @@ class User extends Authenticatable
         'payment_type',
         'terms_agreed',
         'share_certificate_agreed',
+        'application_status',
+        'certificate_path',
+        'certificate_number',
+        'certificate_issued_date',
     ];
 
     /**
@@ -55,6 +59,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'terms_agreed' => 'boolean',
             'share_certificate_agreed' => 'boolean',
+            'certificate_issued_date' => 'datetime',
         ];
     }
 }
