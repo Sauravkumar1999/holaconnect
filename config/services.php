@@ -36,25 +36,24 @@ return [
     ],
 
     'viva' => [
-        'merchant_id' => env('VIVA_MERCHANT_ID'),
-        'api_key' => env('VIVA_API_KEY'),
-        'environment' => env('VIVA_ENVIRONMENT', 'demo'), // 'demo' or 'production'
+        'client_id' => env('VIVA_CLIENT_ID'),
+        'client_secret' => env('VIVA_CLIENT_SECRET'),
+        'environment' => env('VIVA_ENVIRONMENT', 'production'), // 'demo' or 'production'
         'registration_amount' => env('VIVA_REGISTRATION_AMOUNT', 100.00),
 
-        // API URLs Configuratio
-
+        // API URLs Configuration
         'urls' => [
             'demo' => [
-                'orders' => 'https://demo.vivapayments.com/api/orders',
-                'transactions' => 'https://demo.vivapayments.com/api/transactions',
-                'orders_detail' => 'https://demo.vivapayments.com/api/orders',
-                'checkout' => 'https://demo.vivapayments.com/api/checkout',
+                'auth' => 'https://demo-accounts.vivapayments.com/connect/token',
+                'orders' => 'https://demo-api.vivapayments.com/checkout/v2/orders',
+                'transactions' => 'https://demo-api.vivapayments.com/checkout/v2/transactions',
+                'checkout' => 'https://demo.vivapayments.com/web/checkout',
             ],
             'production' => [
-                'orders' => 'https://www.vivapayments.com/api/orders',
-                'transactions' => 'https://www.vivapayments.com/api/transactions',
-                'orders_detail' => 'https://api.vivapayments.com/api/orders',
-                'checkout' => 'https://www.vivapayments.com/api/orders',
+                'auth' => 'https://accounts.vivapayments.com/connect/token',
+                'orders' => 'https://api.vivapayments.com/checkout/v2/orders',
+                'transactions' => 'https://api.vivapayments.com/checkout/v2/transactions',
+                'checkout' => 'https://www.vivapayments.com/web/checkout',
             ],
         ],
     ],
