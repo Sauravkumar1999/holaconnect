@@ -34,7 +34,7 @@ class CertificateGenerationService
         try {
             if (class_exists(\Spatie\Browsershot\Browsershot::class)) {
                 \Spatie\Browsershot\Browsershot::html($html)
-                    ->windowSize(1920, 1080)
+                    ->windowSize(1024, 724)
                     ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
                     ->waitUntilNetworkIdle()
                     ->save($publicPath);
