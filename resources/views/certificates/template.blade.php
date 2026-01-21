@@ -132,7 +132,7 @@
 
         .user-name {
             font-family: 'Great Vibes', cursive;
-            font-size: 82px;
+            font-size: 65px;
             margin: 0;
             padding: 0 40px;
             color: #1a3c6c;
@@ -186,7 +186,7 @@
 
         .meta-data {
             position: absolute;
-            bottom: 100px;
+            bottom: 120px;
             left: 140px;
             text-align: left;
             font-size: 15px;
@@ -240,7 +240,7 @@
 
         .signature-section {
             position: absolute;
-            bottom: 100px;
+            bottom: 120px;
             right: 140px;
             text-align: center;
             width: 250px;
