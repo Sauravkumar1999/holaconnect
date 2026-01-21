@@ -24,8 +24,24 @@ class CertificateGenerationService
             mkdir(dirname($publicPath), 0755, true);
         }
 
+        // Get settings for certificate
+        $companyName = \App\Models\Setting::get('company_name', 'HOLA TAXI IRELAND LIMITED');
+        $companyLogo = \App\Models\Setting::get('company_logo_path');
+        $directorName = \App\Models\Setting::get('director_name', 'Kamal S Gill');
+        $directorSignature = \App\Models\Setting::get('director_signature_path');
+
         // Render the View to HTML
-        $html = view('certificates.template', compact('userName', 'certificateNumber', 'issuedDate', 'licenseNumber', 'shares'))->render();
+        $html = view('certificates.template', compact(
+            'userName',
+            'certificateNumber',
+            'issuedDate',
+            'licenseNumber',
+            'shares',
+            'companyName',
+            'companyLogo',
+            'directorName',
+            'directorSignature'
+        ))->render();
 
         // Convert HTML to Image using Browsershot (Puppeteer)
         // Make sure to run: composer require spatie/browsershot

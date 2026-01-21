@@ -6,12 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Share Certificate</title>
     <!-- Use Google Fonts for better rendering in Browsershot -->
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;700&display=swap"
+        rel="stylesheet">
     @php
-        // We can inline the image as base64 to ensure it renders in tools like Browsershot/DomPDF without path issues
+        // Background Image
         $bgPath = public_path('images/certificate-bg.jpg');
-        $bgData = base64_encode(file_get_contents($bgPath));
-        $bgImage = 'data:image/jpeg;base64,' . $bgData;
+        $bgImage = file_exists($bgPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($bgPath)) : '';
+
+        // Dynamic Logo
+        $logoImage = null;
+        if (!empty($companyLogo)) {
+            $fullLogoPath = public_path($companyLogo);
+            if (file_exists($fullLogoPath)) {
+                $logoData = base64_encode(file_get_contents($fullLogoPath));
+                $mimeType = mime_content_type($fullLogoPath);
+                $logoImage = 'data:' . $mimeType . ';base64,' . $logoData;
+            }
+        }
+
+        // Dynamic Signature
+        $signatureImage = null;
+        if (!empty($directorSignature)) {
+            $fullSigPath = public_path($directorSignature);
+            if (file_exists($fullSigPath)) {
+                $sigData = base64_encode(file_get_contents($fullSigPath));
+                $sigMimeType = mime_content_type($fullSigPath);
+                $signatureImage = 'data:' . $sigMimeType . ';base64,' . $sigData;
+            }
+        }
     @endphp
     <style>
         body {
@@ -32,7 +55,8 @@
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            color: #0c2044; /* Deep Navy from image */
+            color: #0c2044;
+            /* Deep Navy from image */
         }
 
         .content {
@@ -49,14 +73,15 @@
         .logo-box {
             width: 70px;
             height: 75px;
-            background-color: #ffd800; /* Yellow from logo */
+            background-color: #ffd800;
+            /* Yellow from logo */
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .logo-box .icon {
@@ -134,8 +159,13 @@
             top: -3.5px;
         }
 
-        .name-underline::before { left: 0; }
-        .name-underline::after { right: 0; }
+        .name-underline::before {
+            left: 0;
+        }
+
+        .name-underline::after {
+            right: 0;
+        }
 
         .description {
             width: 80%;
@@ -183,7 +213,7 @@
             border-radius: 50%;
             border: 4px double #fff;
             position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 5;
         }
 
@@ -195,11 +225,18 @@
             top: 50px;
             clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
             z-index: 4;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .ribbon-left { left: 10px; transform: rotate(15deg); }
-        .ribbon-right { right: 10px; transform: rotate(-15deg); }
+        .ribbon-left {
+            left: 10px;
+            transform: rotate(15deg);
+        }
+
+        .ribbon-right {
+            right: 10px;
+            transform: rotate(-15deg);
+        }
 
         .signature-section {
             position: absolute;
@@ -231,18 +268,24 @@
     <div class="certificate-container">
         <div class="content">
             <!-- Logo -->
-            <div class="logo-box">
-                <div class="icon">
-                   <svg width="40" height="40" viewBox="0 0 100 100">
-                       <path d="M20 20 Q50 80 80 20" stroke="#0c2044" stroke-width="8" fill="none" />
-                   </svg>
+            @if($logoImage)
+                <div style="margin-bottom: 20px;">
+                    <img src="{{ $logoImage }}" style="max-height: 80px; max-width: 150px; object-fit: contain;">
                 </div>
-                <div class="label">HOLA TAXI<br>Driver</div>
-            </div>
+            @else
+                <div class="logo-box">
+                    <div class="icon">
+                        <svg width="40" height="40" viewBox="0 0 100 100">
+                            <path d="M20 20 Q50 80 80 20" stroke="#0c2044" stroke-width="8" fill="none" />
+                        </svg>
+                    </div>
+                    <div class="label">HOLA TAXI<br>Driver</div>
+                </div>
+            @endif
 
             <!-- Header -->
             <div class="title">SHARE CERTIFICATE</div>
-            <div class="company-name">COMPANY NAME: HOLA TAXI IRELAND LIMITED</div>
+            <div class="company-name">COMPANY NAME: {{ $companyName }}</div>
 
             <!-- Certification Text -->
             <div class="certify-text">THIS IS TO CERTIFY THAT</div>
@@ -255,8 +298,9 @@
 
             <!-- Description -->
             <div class="description">
-                of <span class="highlight">{{ $licenseNumber }}</span> holding license number is the registered holder of <span class="highlight">{{ number_format($shares) }}</span><br>
-                Class A Ordinary Shares in the capital of Hola Taxi Ireland Limited.
+                of <span class="highlight">{{ $licenseNumber }}</span> holding license number is the registered holder
+                of <span class="highlight">{{ number_format($shares) }}</span><br>
+                Class A Ordinary Shares in the capital of {{ $companyName }}.
             </div>
 
             <!-- Meta Data (Left) -->
@@ -274,8 +318,15 @@
 
             <!-- Signature (Right) -->
             <div class="signature-section">
-                <div class="signature-name">Kamal S Gill</div>
+                @if($signatureImage)
+                    <div style="margin-bottom: -10px;">
+                        <img src="{{ $signatureImage }}" style="max-height: 70px; max-width: 200px; object-fit: contain;">
+                    </div>
+                @else
+                    <div class="signature-name">{{ $directorName }}</div>
+                @endif
                 <div class="signature-line">DIRECTOR</div>
+                <div style="font-size: 10px; margin-top: 2px; font-weight: bold;">{{ $directorName }}</div>
             </div>
         </div>
     </div>
