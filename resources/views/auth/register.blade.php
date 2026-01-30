@@ -94,7 +94,7 @@
                     <!-- PSP Number -->
                     <div class="form-group">
                         <label for="psp_number" class="form-label">
-                            PSP Number
+                            PPS Number <span class="required-mark">*</span>
                         </label>
                         <input type="text" class="form-control @error('psp_number') is-invalid @enderror" id="psp_number"
                             name="psp_number" value="{{ old('psp_number') }}" placeholder="Enter PSP number (optional)">
@@ -106,7 +106,7 @@
                     <!-- Taxi Driver ID Number -->
                     <div class="form-group">
                         <label for="taxi_driver_id" class="form-label">
-                            Taxi Driver ID Number
+                            Taxi Driver ID Number <span class="required-mark">*</span>
                         </label>
                         <input type="text" class="form-control @error('taxi_driver_id') is-invalid @enderror"
                             id="taxi_driver_id" name="taxi_driver_id" value="{{ old('taxi_driver_id') }}"
@@ -122,7 +122,8 @@
                             Upload Taxi Driver Dashboard Number Document <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_dashboard') is-invalid @enderror"
-                            id="document_dashboard" name="document_dashboard" required accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                            id="document_dashboard" name="document_dashboard" required
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
                         <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_dashboard')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -135,7 +136,8 @@
                             Upload Proof of Identity Document <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_identity') is-invalid @enderror"
-                            id="document_identity" name="document_identity" required accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                            id="document_identity" name="document_identity" required
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
                         <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_identity')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -181,7 +183,8 @@
                             Upload Payment Receipt <span class="required-mark">*</span>
                         </label>
                         <input type="file" class="form-control @error('document_payment_receipt') is-invalid @enderror"
-                            id="document_payment_receipt" name="document_payment_receipt" accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
+                            id="document_payment_receipt" name="document_payment_receipt"
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
                         <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
                         @error('document_payment_receipt')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -196,7 +199,7 @@
                                 {{ old('terms_agreed') ? 'checked' : '' }} required>
                             <label class="form-check-label" style="margin-left: 10px" for="terms_agreed">
                                 I agree to the
-                                <a href="https://holaconnect.ie/user/register.php/HOLATaxiIrelandLimitedShareCertificateIssuanceAgreement.pdf"
+                                <a href="{{ asset('docs/HOLATaxiIrelandLimitedShareCertificateIssuanceAgreement.pdf') }}"
                                     target="_blank">
                                     Hola Taxi Ireland Limited Shareholders Agreement
                                 </a> <span class="required-mark">*</span>
@@ -215,7 +218,7 @@
                                 {{ old('share_certificate_agreed') ? 'checked' : '' }} required>
                             <label class="form-check-label" style="margin-left: 10px" for="share_certificate_agreed">
                                 I agree to the
-                                <a href="https://holaconnect.ie/user/register.php/HOLATaxiIrelandLimitedShareholdersAgreement.doc"
+                                <a href="{{ asset('docs/HOLATaxiIrelandLimitedShareholdersAgreement.pdf') }}"
                                     target="_blank">
                                     Share Certificate Issue Agreement
                                 </a> <span class="required-mark">*</span>
@@ -264,53 +267,62 @@
 
             function togglePaymentReceipt() {
                 // Reset active classes
-                if(existingUserCard) existingUserCard.classList.remove('active');
-                if(partialUserCard) partialUserCard.classList.remove('active');
-                if(newUserCard) newUserCard.classList.remove('active');
+                if (existingUserCard) existingUserCard.classList.remove('active');
+                if (partialUserCard) partialUserCard.classList.remove('active');
+                if (newUserCard) newUserCard.classList.remove('active');
 
                 if (existingUserRadio && existingUserRadio.checked) {
                     // Existing User: Upload File + NO Payment
-                    if(paymentReceiptField) paymentReceiptField.style.display = 'block';
-                    if(paymentReceiptInput) paymentReceiptInput.required = true;
-                    if(existingUserCard) existingUserCard.classList.add('active');
+                    if (paymentReceiptField) paymentReceiptField.style.display = 'block';
+                    if (paymentReceiptInput) paymentReceiptInput.required = true;
+                    if (existingUserCard) existingUserCard.classList.add('active');
                 } else if (partialUserRadio && partialUserRadio.checked) {
                     // Partial User: Upload File + Payment (Amount - 5)
-                    if(paymentReceiptField) paymentReceiptField.style.display = 'block';
-                    if(paymentReceiptInput) paymentReceiptInput.required = true;
-                    if(partialUserCard) partialUserCard.classList.add('active');
+                    if (paymentReceiptField) paymentReceiptField.style.display = 'block';
+                    if (paymentReceiptInput) paymentReceiptInput.required = true;
+                    if (partialUserCard) partialUserCard.classList.add('active');
                 } else if (newUserRadio && newUserRadio.checked) {
                     // New User: No Upload + Full Payment
-                    if(paymentReceiptField) paymentReceiptField.style.display = 'none';
-                    if(paymentReceiptInput) {
+                    if (paymentReceiptField) paymentReceiptField.style.display = 'none';
+                    if (paymentReceiptInput) {
                         paymentReceiptInput.required = false;
                         paymentReceiptInput.value = '';
                     }
-                    if(newUserCard) newUserCard.classList.add('active');
+                    if (newUserCard) newUserCard.classList.add('active');
                 }
             }
 
             // Add event listeners
-            if(existingUserRadio) existingUserRadio.addEventListener('change', togglePaymentReceipt);
-            if(partialUserRadio) partialUserRadio.addEventListener('change', togglePaymentReceipt);
-            if(newUserRadio) newUserRadio.addEventListener('change', togglePaymentReceipt);
+            if (existingUserRadio) existingUserRadio.addEventListener('change', togglePaymentReceipt);
+            if (partialUserRadio) partialUserRadio.addEventListener('change', togglePaymentReceipt);
+            if (newUserRadio) newUserRadio.addEventListener('change', togglePaymentReceipt);
 
             // Initialize on page load
             togglePaymentReceipt();
 
             // Make radio cards clickable
-            if(existingUserCard) {
-                existingUserCard.addEventListener('click', function() { 
-                    if(existingUserRadio) { existingUserRadio.checked = true; togglePaymentReceipt(); }
+            if (existingUserCard) {
+                existingUserCard.addEventListener('click', function() {
+                    if (existingUserRadio) {
+                        existingUserRadio.checked = true;
+                        togglePaymentReceipt();
+                    }
                 });
             }
-            if(partialUserCard) {
-                partialUserCard.addEventListener('click', function() { 
-                    if(partialUserRadio) { partialUserRadio.checked = true; togglePaymentReceipt(); }
+            if (partialUserCard) {
+                partialUserCard.addEventListener('click', function() {
+                    if (partialUserRadio) {
+                        partialUserRadio.checked = true;
+                        togglePaymentReceipt();
+                    }
                 });
             }
-            if(newUserCard) {
-                newUserCard.addEventListener('click', function() { 
-                    if(newUserRadio) { newUserRadio.checked = true; togglePaymentReceipt(); }
+            if (newUserCard) {
+                newUserCard.addEventListener('click', function() {
+                    if (newUserRadio) {
+                        newUserRadio.checked = true;
+                        togglePaymentReceipt();
+                    }
                 });
             }
         });

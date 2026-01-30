@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AdminNewRegistrationNotification;
+use App\Mail\UserRegistrationComplete;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\VivaPaymentService;
@@ -9,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class PaymentController extends Controller
@@ -237,6 +240,15 @@ class PaymentController extends Controller
 
             // Link payment to user
             $payment->update(['user_id' => $user->id]);
+
+            // Send email to user
+            Mail::to($user->email)->send(new UserRegistrationComplete($user));
+
+            // Send email to admin
+            // $adminEmail = User::where('user_type', 0)->first()?->email ?? config('mail.from.address');
+            // if ($adminEmail) {
+            //     Mail::to($adminEmail)->send(new AdminNewRegistrationNotification($user));
+            // }
 
             // Clear pending registration data
             session()->forget('pending_registration');

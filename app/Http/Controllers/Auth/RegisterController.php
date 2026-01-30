@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminNewRegistrationNotification;
+use App\Mail\UserRegistrationComplete;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\VivaPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class RegisterController extends Controller
@@ -39,14 +42,14 @@ class RegisterController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'required|string|max:20',
-            'psp_number' => 'nullable|string|max:255',
-            'taxi_driver_id' => 'nullable|string|max:255',
+            'psp_number' => 'required|string|max:255',
+            'taxi_driver_id' => 'required|string|max:255',
             'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
             'payment_type' => 'required|in:existing_user,partial_user,new_user',
             'document_payment_receipt' => 'required_if:payment_type,existing_user,partial_user|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'terms_agreed' => 'required|accepted',
-            'share_certificate_agreed' => 'required|accepted',
+            'terms_agreed' => 'required',
+            'share_certificate_agreed' => 'required',
         ]);
 
         if ($validated['payment_type'] === 'existing_user') {
@@ -79,6 +82,15 @@ class RegisterController extends Controller
             'terms_agreed' => true,
             'share_certificate_agreed' => true,
         ]);
+
+        // Send email to user
+        Mail::to($user->email)->send(new UserRegistrationComplete($user));
+
+        // Send email to admin
+        // $adminEmail = User::where('user_type', 0)->first()?->email ?? config('mail.from.address');
+        // if ($adminEmail) {
+        //     Mail::to($adminEmail)->send(new AdminNewRegistrationNotification($user));
+        // }
 
         // Log the user in
         Auth::login($user);

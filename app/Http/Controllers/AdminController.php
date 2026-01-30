@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ApplicationAccepted;
 use App\Models\User;
 use App\Services\CertificateGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Yajra\DataTables\Facades\DataTables;
 use Yajra\DataTables\Html\Builder;
 use Yajra\DataTables\Html\Button;
@@ -233,6 +235,9 @@ class AdminController extends Controller
                 'certificate_number' => $certificateNumber,
                 'certificate_issued_date' => now(),
             ]);
+
+            // Send acceptance email to user
+            Mail::to($user->email)->send(new ApplicationAccepted($user));
 
             return response()->json([
                 'success' => true,
