@@ -39,7 +39,7 @@ return [
         'client_id' => env('VIVA_CLIENT_ID'),
         'client_secret' => env('VIVA_CLIENT_SECRET'),
         'environment' => env('VIVA_ENVIRONMENT', 'production'), // 'demo' or 'production'
-        'registration_amount' => env('VIVA_REGISTRATION_AMOUNT', 100.00),
+        'registration_amount' => env('VIVA_REGISTRATION_AMOUNT', 12),
 
         // API URLs Configuration
         'urls' => [

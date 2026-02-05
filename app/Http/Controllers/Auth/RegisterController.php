@@ -117,11 +117,11 @@ class RegisterController extends Controller
         }
 
         // Calculate Amount
-        $baseAmount = (float) \App\Models\Setting::get('registration_payment_amount', 50.00);
+        $baseAmount = (int) \App\Models\Setting::get('registration_payment_amount', config('services.viva.registration_amount'));
         $amount = $baseAmount;
 
         if ($validated['payment_type'] === 'partial_user') {
-            $amount = $baseAmount - 5;
+            $amount = (float) $baseAmount - 5;
         }
 
         if ($amount < 0.30)

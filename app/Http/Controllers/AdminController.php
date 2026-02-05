@@ -18,7 +18,7 @@ class AdminController extends Controller
 
     public function __construct()
     {
-        if (Auth::user()->user_type !== 0) {
+        if (Auth::user()->user_type != "0") {
             abort(403, 'Unauthorized access.');
         }
     }
@@ -213,6 +213,7 @@ class AdminController extends Controller
         }
 
         try {
+            $shares = is_null($user->payment) ? 50000 : 12000;
             // Generate certificate number
             $certificateNumber = $certificateService->generateCertificateNumber($user->id);
 
@@ -225,7 +226,7 @@ class AdminController extends Controller
                 $certificateNumber,
                 $issuedDate,
                 'Ireland',
-                250000
+                $shares
             );
 
             // Update user record

@@ -10,7 +10,7 @@ class SettingsController extends Controller
 {
     public function __construct()
     {
-        if (Auth::user()->user_type !== 0) {
+        if (Auth::user()->user_type != "0") {
             abort(403, 'Unauthorized access.');
         }
     }

@@ -62,4 +62,8 @@ class User extends Authenticatable
             'certificate_issued_date' => 'datetime',
         ];
     }
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }
