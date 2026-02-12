@@ -55,8 +55,8 @@ class ApplicationAccepted extends Mailable
 
         if ($this->user->certificate_path && file_exists(public_path($this->user->certificate_path))) {
             $attachments[] = Attachment::fromPath(public_path($this->user->certificate_path))
-                ->as('Certificate.jpg')
-                ->withMime('image/jpeg');
+                ->as('Certificate.pdf')
+                ->withMime('application/pdf');
         }
 
         return $attachments;

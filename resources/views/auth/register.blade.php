@@ -97,7 +97,7 @@
                             PPS Number <span class="required-mark">*</span>
                         </label>
                         <input type="text" class="form-control @error('psp_number') is-invalid @enderror" id="psp_number"
-                            name="psp_number" value="{{ old('psp_number') }}" placeholder="Enter PSP number (optional)">
+                            name="psp_number" value="{{ old('psp_number') }}" placeholder="Enter PPS number">
                         @error('psp_number')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -110,7 +110,7 @@
                         </label>
                         <input type="text" class="form-control @error('taxi_driver_id') is-invalid @enderror"
                             id="taxi_driver_id" name="taxi_driver_id" value="{{ old('taxi_driver_id') }}"
-                            placeholder="Enter taxi driver ID (optional)">
+                            placeholder="Enter taxi driver ID">
                         @error('taxi_driver_id')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror

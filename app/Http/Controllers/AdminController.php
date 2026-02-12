@@ -297,6 +297,7 @@ class AdminController extends Controller
 
         try {
             // Delete old certificate file if it exists
+            $shares = is_null($user->payment) ? 50000 : 12000;
             if ($user->certificate_path) {
                 $oldCertificatePath = public_path($user->certificate_path);
                 if (file_exists($oldCertificatePath)) {
@@ -316,7 +317,7 @@ class AdminController extends Controller
                 $certificateNumber,
                 $issuedDate,
                 'Ireland',
-                250000
+                $shares
             );
 
             // Update user record with new certificate

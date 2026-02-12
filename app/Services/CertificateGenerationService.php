@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class CertificateGenerationService
 {
     /**
@@ -14,10 +16,10 @@ class CertificateGenerationService
      * @param int $shares
      * @return string Path to the generated certificate
      */
-    public function generateCertificate(string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber = 'Ireland', int $shares = 250000): string
+    public function generateCertificate(string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber = 'Ireland', $shares): string
     {
         // Ensure the directory exists
-        $fileName = 'documents/certificates/' . uniqid('cert_') . '.jpg'; // Using JPG as background is JPG
+        $fileName = 'documents/certificates/' . uniqid('cert_') . '.pdf';
         $publicPath = public_path($fileName);
 
         if (!file_exists(dirname($publicPath))) {
@@ -26,39 +28,34 @@ class CertificateGenerationService
 
         // Get settings for certificate
         $companyName = \App\Models\Setting::get('company_name', 'HOLA TAXI IRELAND LIMITED');
-        $companyLogo = \App\Models\Setting::get('company_logo_path');
+        $companyLogo = \App\Models\Setting::get('company_logo_path', 'images/hola-logo.jpeg');
         $directorName = \App\Models\Setting::get('director_name', 'Kamal S Gill');
         $directorSignature = \App\Models\Setting::get('director_signature_path');
 
-        // Render the View to HTML
-        $html = view('certificates.template', compact(
-            'userName',
-            'certificateNumber',
-            'issuedDate',
-            'licenseNumber',
-            'shares',
-            'companyName',
-            'companyLogo',
-            'directorName',
-            'directorSignature'
-        ))->render();
-
-        // Convert HTML to Image using Browsershot (Puppeteer)
-        // Make sure to run: composer require spatie/browsershot
-        // and: npm install puppeteer
-
         try {
-            if (class_exists(\Spatie\Browsershot\Browsershot::class)) {
-                \Spatie\Browsershot\Browsershot::html($html)
-                    ->windowSize(1024, 724)
-                    ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-                    ->waitUntilNetworkIdle()
-                    ->save($publicPath);
-            } else {
-                throw new \Exception('Spatie\Browsershot is not installed. Please run "composer require spatie/browsershot" and "npm install puppeteer".');
-            }
+            $pdf = Pdf::loadView('certificates.template', compact(
+                'userName',
+                'certificateNumber',
+                'issuedDate',
+                'licenseNumber',
+                'shares',
+                'companyName',
+                'companyLogo',
+                'directorName',
+                'directorSignature'
+            ));
+
+            // Set custom paper size (defined as portrait [0, 0, width, height], then rotated to landscape)
+            $pdf->setPaper([0, 0, 543, 768], 'landscape');
+
+            $pdf->setOptions([
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+                'dpi' => 96
+            ]);
+
+            $pdf->save($publicPath);
         } catch (\Exception $e) {
-            // Fallback or rethrow - Here we rely on the user installing the package as requested
             throw new \Exception('Certificate generation failed: ' . $e->getMessage());
         }
 

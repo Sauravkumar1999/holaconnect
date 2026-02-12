@@ -3,331 +3,307 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Share Certificate</title>
-    <!-- Use Google Fonts for better rendering in Browsershot -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;700&display=swap"
-        rel="stylesheet">
-    @php
-        // Background Image
-        $bgPath = public_path('images/certificate-bg.jpg');
-        $bgImage = file_exists($bgPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($bgPath)) : '';
-
-        // Dynamic Logo
-        $logoImage = null;
-        if (!empty($companyLogo)) {
-            $fullLogoPath = public_path($companyLogo);
-            if (file_exists($fullLogoPath)) {
-                $logoData = base64_encode(file_get_contents($fullLogoPath));
-                $mimeType = mime_content_type($fullLogoPath);
-                $logoImage = 'data:' . $mimeType . ';base64,' . $logoData;
-            }
-        }
-
-        // Dynamic Signature
-        $signatureImage = null;
-        if (!empty($directorSignature)) {
-            $fullSigPath = public_path($directorSignature);
-            if (file_exists($fullSigPath)) {
-                $sigData = base64_encode(file_get_contents($fullSigPath));
-                $sigMimeType = mime_content_type($fullSigPath);
-                $signatureImage = 'data:' . $sigMimeType . ';base64,' . $sigData;
-            }
-        }
-    @endphp
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;700&display=swap');
+
         body {
             margin: 0;
             padding: 0;
-            width: 1024px;
-            height: 724px;
-            overflow: hidden;
-            font-family: 'Libre Baskerville', serif;
-            background-color: #fff;
-        }
-
-        .certificate-container {
-            width: 1024px;
-            height: 724px;
-            position: relative;
-            background-image: url('{{ $bgImage }}');
-            background-size: 100% 100%;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #0c2044;
-            /* Deep Navy from image */
-        }
-
-        .content {
-            position: relative;
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 40px;
+            font-family: 'Libre Baskerville', serif;
+            background-repeat: no-repeat;
+            background-size: cover;
         }
 
-        /* Logo Placeholder (CSS based) */
-        .logo-box {
-            width: 70px;
-            height: 75px;
-            background-color: #ffd800;
-            /* Yellow from logo */
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+        /* 
+           DomPDF does not support standard background-size: cover on body well with base64.
+           We'll rely on the container.
+        */
 
-        .logo-box .icon {
-            color: #0c2044;
-            font-weight: bold;
-            font-size: 24px;
-            line-height: 1;
-        }
-
-        .logo-box .label {
-            font-size: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .certificate-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
             text-align: center;
+            /* Replaces flex-direction column + align-items center */
             color: #0c2044;
         }
 
+        /* Helper for vertical spacing since we lost flex gap */
+        .spacer-10 {
+            height: 10px;
+        }
+
+        .spacer-20 {
+            height: 20px;
+        }
+
+        .spacer-40 {
+            height: 40px;
+        }
+
+        .spacer-60 {
+            height: 60px;
+        }
+
+        /* Logo Area */
+        .logo-container {
+            margin-top: 45px;
+            /* Reduced from 50px */
+            margin-bottom: 5px;
+            /* Reduced from 20px */
+            width: 100%;
+            text-align: center;
+        }
+
+        /* ... logo-box styles ... */
+        .logo-box {
+            width: 60px;
+            /* Slightly smaller */
+            height: 65px;
+            background-color: #ffd800;
+            border-radius: 12px;
+            margin: 0 auto;
+            padding-top: 12px;
+            box-sizing: border-box;
+        }
+
+        /* ... */
+
+        /* Texts */
         .title {
-            font-size: 52px;
+            font-size: 38px;
+            /* Reduced from 42px */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 5px;
             margin-bottom: 5px;
             color: #1a3c6c;
+            width: 100%;
         }
 
         .company-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
+            /* Reduced from 30px */
         }
 
         .certify-text {
-            font-size: 20px;
+            font-size: 16px;
+            /* Reduced from 18px */
             font-style: italic;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        .user-name-wrapper {
-            position: relative;
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        /* User Name */
         .user-name {
             font-family: 'Great Vibes', cursive;
-            font-size: 65px;
-            margin: 0;
-            padding: 0 40px;
+            font-size: 50px;
+            /* Reduced from 60px */
+            margin: 5px auto;
             color: #1a3c6c;
-            line-height: 0.8;
-            z-index: 2;
+            line-height: 1;
         }
 
         .name-underline {
-            width: 600px;
-            height: 1.5px;
+            width: 500px;
+            height: 2px;
             background-color: #1a3c6c;
+            margin: 0 auto 15px auto;
+            /* Reduced bottom margin */
             position: relative;
-            margin-top: -5px;
         }
 
-        .name-underline::before,
-        .name-underline::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background-color: #1a3c6c;
-            border-radius: 50%;
-            top: -3.5px;
-        }
+        /* ... dots ... */
 
-        .name-underline::before {
-            left: 0;
-        }
-
-        .name-underline::after {
-            right: 0;
-        }
-
+        /* Description Body */
         .description {
             width: 80%;
+            margin: 0 auto;
             text-align: center;
-            font-size: 17px;
-            line-height: 2;
-            margin-top: 10px;
+            font-size: 15px;
+            /* Reduced from 16px */
+            line-height: 1.6;
         }
 
-        .highlight {
-            font-weight: bold;
-            border-bottom: 1px solid #0c2044;
-            padding: 0 15px;
-            margin: 0 2px;
-            display: inline-block;
-            min-width: 60px;
+        /* Bottom Section */
+        .bottom-section {
+            margin-top: 40px;
+            /* Reduced from 80px to pull everything up */
+            width: 100%;
+            position: relative;
+            height: 150px;
         }
 
         .meta-data {
             position: absolute;
-            bottom: 120px;
-            left: 140px;
+            left: 80px;
+            /* Adjusted X */
+            bottom: 50px;
+            /* Increased bottom to move UP inside border */
             text-align: left;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: bold;
         }
 
         .meta-item {
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
 
-        .seal-container {
+        /* Seal - Center Bottom */
+        .seal-wrapper {
             position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            /* Moved UP */
+            margin: 0 auto;
+            width: 100px;
+            height: 120px;
+            text-align: center;
         }
 
-        /* Gold Seal Ribbon (CSS based) */
-        .seal {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #fcd34d 0%, #d97706 100%);
-            border-radius: 50%;
-            border: 4px double #fff;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 5;
-        }
-
-        .ribbon {
-            position: absolute;
-            width: 30px;
-            height: 60px;
-            background-color: #fcd34d;
-            top: 50px;
-            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-            z-index: 4;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .ribbon-left {
-            left: 10px;
-            transform: rotate(15deg);
-        }
-
-        .ribbon-right {
-            right: 10px;
-            transform: rotate(-15deg);
-        }
-
+        /* Signature - Right Bottom */
         .signature-section {
             position: absolute;
-            bottom: 120px;
-            right: 140px;
-            text-align: center;
+            right: 80px;
+            /* Adjusted X */
+            bottom: 50px;
+            /* Increased bottom to move UP inside border */
             width: 250px;
-        }
-
-        .signature-line {
-            border-top: 1px solid #0c2044;
-            margin-top: 5px;
-            padding-top: 5px;
-            font-weight: bold;
-            font-size: 16px;
-            text-transform: uppercase;
+            text-align: center;
         }
 
         .signature-name {
             font-family: 'Great Vibes', cursive;
-            font-size: 38px;
-            margin-bottom: -10px;
+            font-size: 32px;
             color: #1a3c6c;
+            margin-bottom: 5px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #0c2044;
+            padding-top: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
         }
     </style>
 </head>
+@php
+    // Background Image
+    $bgPath = public_path('images/certificate-bg.jpg');
+    // Ensure we have a fallback or valid path. 
+    // DomPDF works best with full system paths for local files, but we are using base64 here which is safe.
+    $bgImage = file_exists($bgPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($bgPath)) : '';
+
+    // Dynamic Logo
+    $logoImage = null;
+    if (!empty($companyLogo)) {
+        $fullLogoPath = public_path($companyLogo);
+        if (file_exists($fullLogoPath)) {
+            $logoData = base64_encode(file_get_contents($fullLogoPath));
+            $mimeType = mime_content_type($fullLogoPath);
+            $logoImage = 'data:' . $mimeType . ';base64,' . $logoData;
+        }
+    }
+
+    // Dynamic Signature
+    $signatureImage = null;
+    if (!empty($directorSignature)) {
+        $fullSigPath = public_path($directorSignature);
+        if (file_exists($fullSigPath)) {
+            $sigData = base64_encode(file_get_contents($fullSigPath));
+            $sigMimeType = mime_content_type($fullSigPath);
+            $signatureImage = 'data:' . $sigMimeType . ';base64,' . $sigData;
+        }
+    }
+@endphp
 
 <body>
+    <!-- Background Image Container -->
+    @if($bgImage)
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">
+            <img src="{{ $bgImage }}" style="width: 100%; height: 100%;">
+        </div>
+    @endif
+
     <div class="certificate-container">
-        <div class="content">
-            <!-- Logo -->
+
+        <!-- Logo -->
+        <div class="logo-container">
             @if($logoImage)
-                <div style="margin-bottom: 20px;">
-                    <img src="{{ $logoImage }}" style="max-height: 80px; max-width: 150px; object-fit: contain;">
-                </div>
+                <img src="{{ $logoImage }}" style="max-height: 80px; max-width: 150px;">
             @else
                 <div class="logo-box">
                     <div class="icon">
-                        <svg width="40" height="40" viewBox="0 0 100 100">
-                            <path d="M20 20 Q50 80 80 20" stroke="#0c2044" stroke-width="8" fill="none" />
-                        </svg>
+                        <!-- Simple Shape for PDF compatibility since SVG can be tricky -->
+                        <span style="font-size: 20px;">&#9679;</span>
                     </div>
                     <div class="label">HOLA TAXI<br>Driver</div>
                 </div>
             @endif
+        </div>
 
-            <!-- Header -->
-            <div class="title">SHARE CERTIFICATE</div>
-            <div class="company-name">COMPANY NAME: {{ $companyName }}</div>
+        <!-- Header -->
+        <div class="title">SHARE CERTIFICATE</div>
+        <div class="company-name">COMPANY NAME: {{ $companyName }}</div>
 
-            <!-- Certification Text -->
-            <div class="certify-text">THIS IS TO CERTIFY THAT</div>
+        <div class="certify-text">THIS IS TO CERTIFY THAT</div>
 
-            <!-- User Name -->
-            <div class="user-name-wrapper">
-                <h1 class="user-name">{{ $userName }}</h1>
-                <div class="name-underline"></div>
-            </div>
+        <!-- User Name -->
+        <div class="user-name">{{ $userName }}</div>
 
-            <!-- Description -->
-            <div class="description">
-                of <span class="highlight">{{ $licenseNumber }}</span> holding license number is the registered holder
-                of <span class="highlight">{{ number_format($shares) }}</span><br>
-                Class A Ordinary Shares in the capital of {{ $companyName }}.
-            </div>
+        <!-- Underline with Dots -->
+        <div class="name-underline">
+            <div class="name-underline-dot-left"></div>
+            <div class="name-underline-dot-right"></div>
+        </div>
 
-            <!-- Meta Data (Left) -->
+        <!-- Description -->
+        <div class="description">
+            of <span class="highlight">{{ $licenseNumber }}</span> holding license number is the registered holder
+            of <span class="highlight">{{ number_format($shares) }}</span><br>
+            Class A Ordinary Shares in the capital of {{ $companyName }}.
+        </div>
+
+        <!-- Bottom Section: Meta, Seal, Signature -->
+        <div class="bottom-section">
+
+            <!-- Left: Meta Data -->
             <div class="meta-data">
                 <div class="meta-item">CERTIFICATE NO: {{ $certificateNumber }}</div>
                 <div class="meta-item">DATE OF ISSUE: {{ $issuedDate }}</div>
             </div>
 
-            <!-- Seal (Center) -->
-            <div class="seal-container">
+            <!-- Center: Seal -->
+            <div class="seal-wrapper">
+                <div class="ribbon-left"></div>
+                <div class="ribbon-right"></div>
                 <div class="seal"></div>
-                <div class="ribbon ribbon-left"></div>
-                <div class="ribbon ribbon-right"></div>
             </div>
 
-            <!-- Signature (Right) -->
+            <!-- Right: Signature -->
             <div class="signature-section">
                 @if($signatureImage)
-                    <div style="margin-bottom: -10px;">
-                        <img src="{{ $signatureImage }}" style="max-height: 70px; max-width: 200px; object-fit: contain;">
+                    <div style="margin-bottom: 5px;">
+                        <img src="{{ $signatureImage }}" style="max-height: 70px; max-width: 200px;">
                     </div>
                 @else
                     <div class="signature-name">{{ $directorName }}</div>
                 @endif
                 <div class="signature-line">DIRECTOR</div>
-                <div style="font-size: 10px; margin-top: 2px; font-weight: bold;">{{ $directorName }}</div>
+                <div class="director-text">{{ $directorName }}</div>
             </div>
+
         </div>
     </div>
 </body>
