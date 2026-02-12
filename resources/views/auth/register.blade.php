@@ -6,8 +6,8 @@
     <div class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header">
-                <h1><i class="fas fa-taxi"></i> Shareholder Registration</h1>
-                <p>Fill The Form</p>
+                <h1><i class="fas fa-taxi"></i> Hola Taxi</h1>
+                <p>Shareholder Registration Form</p>
             </div>
 
             <div class="auth-body">
@@ -123,8 +123,8 @@
                         </label>
                         <input type="file" class="form-control @error('document_dashboard') is-invalid @enderror"
                             id="document_dashboard" name="document_dashboard" required
-                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
-                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx,.png,.jpg,.jpeg,.webp">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX, PNG, JPG, JPEG, WEBP (Max: 10MB)</small>
                         @error('document_dashboard')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -137,8 +137,8 @@
                         </label>
                         <input type="file" class="form-control @error('document_identity') is-invalid @enderror"
                             id="document_identity" name="document_identity" required
-                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
-                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx,.png,.jpg,.jpeg,.webp">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX, PNG, JPG, JPEG, WEBP (Max: 10MB)</small>
                         @error('document_identity')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
@@ -184,8 +184,8 @@
                         </label>
                         <input type="file" class="form-control @error('document_payment_receipt') is-invalid @enderror"
                             id="document_payment_receipt" name="document_payment_receipt"
-                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx">
-                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX (Max: 10MB)</small>
+                            accept=".pdf,.csv,.xlsx,.xls,.doc,.docx,.png,.jpg,.jpeg,.webp">
+                        <small class="text-muted">Accepted formats: PDF, CSV, XLSX, XLS, DOC, DOCX, PNG, JPG, JPEG, WEBP (Max: 10MB)</small>
                         @error('document_payment_receipt')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror

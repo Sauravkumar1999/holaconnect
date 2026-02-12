@@ -215,7 +215,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h3><i class="fas fa-taxi"></i> Hola Connect</h3>
+                <h3><i class="fas fa-taxi"></i> Hola Taxi</h3>
             </div>
             <ul class="sidebar-menu">
                 <li>

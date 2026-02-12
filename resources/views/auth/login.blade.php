@@ -6,7 +6,7 @@
     <div class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header">
-                <h1><i class="fas fa-taxi"></i> Hola Connect</h1>
+                <h1><i class="fas fa-taxi"></i> Hola Taxi</h1>
                 <p>Welcome Back!</p>
             </div>
 

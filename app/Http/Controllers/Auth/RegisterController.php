@@ -44,10 +44,10 @@ class RegisterController extends Controller
             'phone' => 'required|string|max:20',
             'psp_number' => 'required|string|max:255',
             'taxi_driver_id' => 'required|string|max:255',
-            'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
-            'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'document_dashboard' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx,png,jpg,jpeg,webp|max:10240',
+            'document_identity' => 'required|file|mimes:pdf,csv,xlsx,xls,doc,docx,png,jpg,jpeg,webp|max:10240',
             'payment_type' => 'required|in:existing_user,partial_user,new_user',
-            'document_payment_receipt' => 'required_if:payment_type,existing_user,partial_user|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx|max:10240',
+            'document_payment_receipt' => 'required_if:payment_type,existing_user,partial_user|nullable|file|mimes:pdf,csv,xlsx,xls,doc,docx,png,jpg,jpeg,webp|max:10240',
             'terms_agreed' => 'required',
             'share_certificate_agreed' => 'required',
         ]);
