@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - Hola Connect')
+@section('title', 'Dashboard - Hola Taxi')
 
 @section('content')
     @if (session('success'))
@@ -12,7 +12,18 @@
     <div class="user-info">
         <h3><i class="fas fa-user-circle"></i> Welcome, {{ Auth::user()->user_type == 1 ? Auth::user()->name : 'Admin' }}!</h3>
         @if (Auth::user()->user_type == 1)
-            <p>Your registration has been submitted successfully. Our team will review your application.</p>
+            @switch (Auth::user()->application_status)
+                @case('pending')
+                    <p>Your registration has been submitted successfully. Our team will review your application.</p>
+                    @break
+                @case('accepted')
+                    <p>Your registration has been accepted. You can now access your account.</p>
+                    @break
+                @case('rejected')
+                    <p>Your registration has been rejected. Please contact support for more information.</p>
+                    @break
+                @default
+            @endswitch
         @else
             <p>You are logged in as an admin.</p>
         @endif

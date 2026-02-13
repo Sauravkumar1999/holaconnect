@@ -96,7 +96,7 @@ class RegisterController extends Controller
         Auth::login($user);
 
         // Redirect with success message
-        return redirect()->route('dashboard')->with('success', 'Successfully Registered! Welcome to Hola Connect.');
+        return redirect()->route('dashboard')->with('success', 'Successfully Registered! Welcome to Hola Taxi.');
     }
 
     private function processPaymentRegistration(Request $request, array $validated)

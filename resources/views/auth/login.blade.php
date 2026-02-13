@@ -52,14 +52,18 @@
                         @enderror
                     </div>
 
-                    <!-- Remember Me -->
-                    <div class="mb-3">
-                        <div class="form-check">
+                    <!-- Remember Me and Forgot Password -->
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check mb-0">
                             <input type="checkbox" class="form-check-input" id="remember" name="remember">
                             <label class="form-check-label" for="remember">
                                 Remember me
                             </label>
                         </div>
+                        <a href="{{ route('password.request') }}"
+                            style="font-size: 0.9rem; color: #667eea; text-decoration: none; font-weight: 600;">
+                            Forgot Password?
+                        </a>
                     </div>
 
                     <!-- Submit Button -->

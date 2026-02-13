@@ -258,7 +258,7 @@ class PaymentController extends Controller
 
             // Redirect with success message
             return redirect()->route('dashboard')
-                ->with('success', 'Payment successful! Successfully Registered! Welcome to Hola Connect.');
+                ->with('success', 'Payment successful! Successfully Registered! Welcome to Hola Taxi.');
         } catch (\Exception $e) {
             Log::error('Registration completion failed', [
                 'error' => $e->getMessage(),

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Registration Details - Hola Connect')
+@section('title', 'Registration Details - Hola Taxi')
 
 @section('page-title')
     <i class="fas fa-user-circle"></i> Registration Details
