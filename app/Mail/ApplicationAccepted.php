@@ -30,7 +30,7 @@ class ApplicationAccepted extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Congratulations! Your Application Has Been Accepted',
+            subject: 'Congratulations! Your Shareholder Application Has Been Approved',
         );
     }
 

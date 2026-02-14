@@ -29,7 +29,7 @@ class UserRegistrationComplete extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Registration Successful - Hola Taxi Ireland',
+            subject: 'Acknowledgement from Hola Taxi - Registration Received',
         );
     }
 
