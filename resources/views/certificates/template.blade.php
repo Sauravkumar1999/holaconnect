@@ -270,7 +270,7 @@
 
         <!-- Description -->
         <div class="description">
-            of <span class="highlight">{{ $licenseNumber }}</span> holding license number is the registered holder
+            of Ireland holding license number is <span class="highlight">{{ $licenseNumber }}</span> the registered holder
             of <span class="highlight">{{ number_format($shares) }}</span><br>
             Class A Ordinary Shares in the capital of {{ $companyName }}.
         </div>

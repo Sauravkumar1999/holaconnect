@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Settings - Hola Connect')
+@section('title', 'Settings - Hola Taxi')
 
 @section('page-title', 'Settings')
 

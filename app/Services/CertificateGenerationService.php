@@ -16,7 +16,7 @@ class CertificateGenerationService
      * @param int $shares
      * @return string Path to the generated certificate
      */
-    public function generateCertificate(string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber = 'Ireland', $shares): string
+    public function generateCertificate(string $userName, string $certificateNumber, string $issuedDate, string $licenseNumber, $shares): string
     {
         // Ensure the directory exists
         $fileName = 'documents/certificates/' . uniqid('cert_') . '.pdf';
@@ -27,7 +27,7 @@ class CertificateGenerationService
         }
 
         // Get settings for certificate
-        $companyName = \App\Models\Setting::get('company_name', 'HOLA TAXI IRELAND LIMITED');
+        $companyName = \App\Models\Setting::get('company_name', 'Hola Taxi Ireland Limited');
         $companyLogo = \App\Models\Setting::get('company_logo_path', 'images/hola-logo.jpeg');
         $directorName = \App\Models\Setting::get('director_name', 'Kamal S Gill');
         $directorSignature = \App\Models\Setting::get('director_signature_path');

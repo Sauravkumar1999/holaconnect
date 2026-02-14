@@ -225,7 +225,7 @@ class AdminController extends Controller
                 $user->name,
                 $certificateNumber,
                 $issuedDate,
-                'Ireland',
+                $user->taxi_driver_id,
                 $shares
             );
 
@@ -316,7 +316,7 @@ class AdminController extends Controller
                 $user->name,
                 $certificateNumber,
                 $issuedDate,
-                'Ireland',
+                $user->taxi_driver_id,
                 $shares
             );
 
