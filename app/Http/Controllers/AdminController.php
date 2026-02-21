@@ -213,7 +213,7 @@ class AdminController extends Controller
         }
 
         try {
-            $shares = is_null($user->payment) ? 50000 : 12000;
+            $shares = is_null($user->payment) ? 100000 : 12000;
             // Generate certificate number
             $certificateNumber = $certificateService->generateCertificateNumber($user->id);
 
@@ -297,7 +297,7 @@ class AdminController extends Controller
 
         try {
             // Delete old certificate file if it exists
-            $shares = is_null($user->payment) ? 50000 : 12000;
+            $shares = is_null($user->payment) ? 100000 : 12000;
             if ($user->certificate_path) {
                 $oldCertificatePath = public_path($user->certificate_path);
                 if (file_exists($oldCertificatePath)) {
